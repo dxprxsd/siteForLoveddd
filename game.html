@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини-игра · Наш первый год</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: #383838;
+      color: #e8e2e2;
+      line-height: 1.9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #b3e58b;
+      text-decoration: none;
+      font-size: 1.1rem;
+      padding: 10px 20px;
+      border: 2px solid #b3e58b;
+      border-radius: 30px;
+      transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+      background: #b3e58b;
+      color: #383838;
+    }
+
+    .game-section {
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-title {
+      color: #b3e58b;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .game-subtitle {
+      color: #a9a2a2;
+      font-size: 1rem;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      background: #2a2a2a;
+      border: 2px solid rgba(179, 229, 139, 0.2);
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+    }
+
+    .game-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(42, 42, 42, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .game-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-overlay h3 {
+      color: #b3e58b;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .game-overlay p {
+      color: #e8e2e2;
+      margin-bottom: 30px;
+      font-size: 1.2rem;
+    }
+
+    .game-btn {
+      background: #b3e58b;
+      color: #383838;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+      margin: 5px;
+    }
+
+    .game-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      .back-btn { top: 10px; left: 10px; padding: 8px 15px; font-size: 1rem; }
+      .game-title { font-size: 1.4rem; margin-top: 40px; }
+      .game-overlay h3 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Назад к открытке</a>
+
+  <section class="game-section">
+    <h2 class="game-title" id="levelTitle">Уровень 1</h2>
+    <p class="game-subtitle">Собери все сердечки и добеги до двери!</p>
+    
+    <div class="game-wrapper">
+      <canvas id="gameCanvas" width="900" height="600"></canvas>
+      <div id="gameOverlay" class="game-overlay">
+        <h3 id="overlayTitle">Уровень пройден!</h3>
+        <p id="overlayText">Ты добрался до заветной двери.</p>
+        <button id="mainBtn" class="game-btn">Следующий уровень</button>
+        <button onclick="restartFullGame()" class="game-btn" style="background: #a9a2a2;">Начать сначала</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('gameOverlay');
+    const levelTitle = document.getElementById('levelTitle');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayText = document.getElementById('overlayText');
+    const mainBtn = document.getElementById('mainBtn');
+
+    // Картинки персонажей и дверей
+    const imgMashulya = new Image();
+    imgMashulya.src = 'mashulya.png';
+    const imgVanya = new Image();
+    imgVanya.src = 'vanya.png';
+
+    // Увеличенные и квадратные размеры персонажа
+    const playerWidth = 50;
+    const playerHeight = 50;
+
+    // Хранилище нажатых клавиш (все в нижнем регистре)
+    const keys = {
+      arrowleft: false, arrowright: false, arrowup: false,
+      a: false, d: false, w: false
+    };
+
+    // Обработчик нажатия клавиш (учитывает и e.code, и e.key)
+    window.addEventListener('keydown', (e) => {
+      const code = e.code; // Физическая клавиша (KeyW, KeyA, KeyD)
+      const key = e.key.toLowerCase(); // Символ (w, a, d, ц, ф, в)
+
+      // Проверяем WASD (независимо от раскладки)
+      if (code === 'KeyW' || key === 'w' || key === 'ц') keys['w'] = true;
+      if (code === 'KeyA' || key === 'a' || key === 'ф') keys['a'] = true;
+      if (code === 'KeyD' || key === 'd' || key === 'в') keys['d'] = true;
+
+      // Проверяем стрелки
+      if (code === 'ArrowUp' || key === 'arrowup') {
+        keys['arrowup'] = true;
+        e.preventDefault();
+      }
+      if (code === 'ArrowLeft' || key === 'arrowleft') {
+        keys['arrowleft'] = true;
+        e.preventDefault();
+      }
+      if (code === 'ArrowRight' || key === 'arrowright') {
+        keys['arrowright'] = true;
+        e.preventDefault();
+      }
+    });
+
+    // Обработчик отпускания клавиш
+    window.addEventListener('keyup', (e) => {
+      const code = e.code;
+      const key = e.key.toLowerCase();
+
+      if (code === 'KeyW' || key === 'w' || key === 'ц') keys['w'] = false;
+      if (code === 'KeyA' || key === 'a' || key === 'ф') keys['a'] = false;
+      if (code === 'KeyD' || key === 'd' || key === 'в') keys['d'] = false;
+
+      if (code === 'ArrowUp' || key === 'arrowup') keys['arrowup'] = false;
+      if (code === 'ArrowLeft' || key === 'arrowleft') keys['arrowleft'] = false;
+      if (code === 'ArrowRight' || key === 'arrowright') keys['arrowright'] = false;
+    });
+
+    const gravity = 0.45;       
+    const jumpPower = -16.5;    
+    const moveSpeed = 3.5;       
+
+    let currentLevel = 1;
+    let gameOver = false;
+    let score = 0;
+
+    // Данные уровней
+    const levels = {
+      1: {
+        title: 'Уровень 1',
+        playerImg: imgMashulya,
+        doorImg: imgVanya,
+        platforms: [
+          { x: -20, y: 0, w: 30, h: 600 },       
+          { x: 890, y: 0, w: 30, h: 600 },       
+          { x: 0, y: -20, w: 900, h: 30 },       
+          { x: 10, y: 570, w: 880, h: 20 },      
+          { x: 10, y: 400, w: 600, h: 20 },      
+          { x: 290, y: 230, w: 600, h: 20 },     
+          { x: 10, y: 100, w: 600, h: 20 }       
+        ],
+        // Дверь сделана квадратной (60x60)
+        door: { x: 150, y: 40, w: 60, h: 60 },
+        hearts: [
+          { x: 200, y: 520, w: 25, h: 25, collected: false },
+          { x: 450, y: 350, w: 25, h: 25, collected: false },
+          { x: 700, y: 180, w: 25, h: 25, collected: false }
+        ],
+        startX: 60,
+        startY: 510
+      },
+      2: {
+        title: 'Уровень 2',
+        playerImg: imgVanya,
+        doorImg: imgMashulya,
+        platforms: [
+          { x: -20, y: 0, w: 30, h: 600 },       
+          { x: 890, y: 0, w: 30, h: 600 },       
+          { x: 0, y: -20, w: 900, h: 30 },       
+          { x: 10, y: 570, w: 880, h: 20 },      
+          { x: 300, y: 440, w: 590, h: 20 },     
+          { x: 10, y: 310, w: 500, h: 20 },      
+          { x: 450, y: 180, w: 440, h: 20 }      
+        ],
+        // Дверь сделана квадратной (60x60)
+        door: { x: 780, y: 120, w: 60, h: 60 },
+        hearts: [
+          { x: 100, y: 520, w: 25, h: 25, collected: false },
+          { x: 600, y: 380, w: 25, h: 25, collected: false },
+          { x: 200, y: 250, w: 25, h: 25, collected: false },
+          { x: 700, y: 120, w: 25, h: 25, collected: false }
+        ],
+        startX: 60,
+        startY: 510
+      }
+    };
+
+    let player = { x: 0, y: 0, vx: 0, vy: 0, w: playerWidth, h: playerHeight, isGround: false };
+
+    // Функция для рисования красивого векторного сердечка
+    function drawHeart(x, y, w, h) {
+      ctx.save();
+      ctx.translate(x + w / 2, y + h / 2);
+      
+      const scale = w / 25; 
+      ctx.scale(scale, scale);
+
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.bezierCurveTo(-10, -15, -20, 0, 0, 15);
+      ctx.bezierCurveTo(20, 0, 10, -15, 0, -5);
+      
+      ctx.fillStyle = '#ff4d4d';
+      ctx.fill();
+      
+      ctx.shadowColor = '#ff4d4d';
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      
+      ctx.restore();
+    }
+
+    function loadLevel(levelNum) {
+      currentLevel = levelNum;
+      const lvl = levels[levelNum];
+      
+      levelTitle.innerText = lvl.title;
+      overlay.classList.remove('show');
+      gameOver = false;
+      score = 0;
+
+      player.x = lvl.startX;
+      player.y = lvl.startY;
+      player.vx = 0;
+      player.vy = 0;
+
+      lvl.hearts.forEach(h => h.collected = false);
+    }
+
+    window.restartFullGame = function() {
+      loadLevel(1);
+    };
+
+    mainBtn.addEventListener('click', () => {
+      if (currentLevel === 1) {
+        loadLevel(2);
+      } else {
+        loadLevel(1);
+      }
+    });
+
+    function isColliding(r1, r2) {
+      return !(r2.x >= r1.x + r1.w || 
+               r2.x + r2.w <= r1.x || 
+               r2.y >= r1.y + r1.h ||
+               r2.y + r2.h <= r1.y);
+    }
+
+    function updatePlayer() {
+      if (gameOver) return;
+      const lvl = levels[currentLevel];
+
+      // Используем ключи в нижнем регистре
+      if (keys['arrowleft'] || keys['a']) player.vx = -moveSpeed;
+      else if (keys['arrowright'] || keys['d']) player.vx = moveSpeed;
+      else player.vx = 0;
+
+      if ((keys['arrowup'] || keys['w']) && player.isGround) {
+        player.vy = jumpPower;
+        player.isGround = false;
+      }
+
+      player.vy += gravity;
+
+      // Коллизии по X
+      player.x += player.vx;
+      for (let plat of lvl.platforms) {
+        if (isColliding(player, plat)) {
+          if (player.vx > 0) player.x = plat.x - player.w;
+          else if (player.vx < 0) player.x = plat.x + plat.w;
+        }
+      }
+
+      // Коллизии по Y
+      player.y += player.vy;
+      player.isGround = false;
+      for (let plat of lvl.platforms) {
+        if (isColliding(player, plat)) {
+          if (player.vy > 0) {
+            player.y = plat.y - player.h;
+            player.vy = 0;
+            player.isGround = true;
+          } else if (player.vy < 0) {
+            player.y = plat.y + plat.h;
+            player.vy = 0;
+          }
+        }
+      }
+
+      // Сбор сердечек
+      lvl.hearts.forEach(h => {
+        if (!h.collected && isColliding(player, h)) {
+          h.collected = true;
+          score++;
+        }
+      });
+    }
+
+    function checkWin() {
+      if (gameOver) return;
+      const lvl = levels[currentLevel];
+
+      if (isColliding(player, lvl.door)) {
+        gameOver = true;
+        overlay.classList.add('show');
+        
+        if (currentLevel === 1) {
+          overlayTitle.innerText = 'Уровень 1 пройден!';
+          overlayText.innerText = `Сердечек собрано: ${score} из ${lvl.hearts.length}. Тебя ждет уровень 2!`;
+          mainBtn.innerText = 'Следующий уровень';
+        } else {
+          overlayTitle.innerText = 'Победа!';
+          overlayText.innerText = `Все уровни пройдены! Сердечек собрано: ${score} из ${lvl.hearts.length}.`;
+          overlayText.innerText = `Вы получаете купон на 1 бесплатный массаж!`;пор
+          mainBtn.innerText = 'Играть заново';
+        }
+      }
+    }
+
+    function draw() {
+      const lvl = levels[currentLevel];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Фон
+      ctx.fillStyle = '#1e1e1e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Платформы
+      ctx.fillStyle = '#4a5a3a';
+      lvl.platforms.forEach(plat => {
+        if (plat.y >= 0 && plat.x >= 0) { 
+          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+          ctx.strokeStyle = '#2a3a2a';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+        }
+      });
+
+      // Дверь
+      if (lvl.doorImg.complete && lvl.doorImg.naturalHeight !== 0) {
+        ctx.drawImage(lvl.doorImg, lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
+      } else {
+        ctx.fillStyle = '#8b0000';
+        ctx.fillRect(lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
+      }
+
+      // Сердечки
+      lvl.hearts.forEach(h => {
+        if (!h.collected) {
+          drawHeart(h.x, h.y, h.w, h.h);
+        }
+      });
+
+      // Персонаж
+      if (lvl.playerImg.complete && lvl.playerImg.naturalHeight !== 0) {
+        ctx.drawImage(lvl.playerImg, player.x, player.y, player.w, player.h);
+      } else {
+        ctx.fillStyle = '#b3e58b'; 
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+      }
+    }
+
+    function gameLoop() {
+      updatePlayer();
+      checkWin();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Инициализация и запуск
+    loadLevel(1);
+    gameLoop();
+  </script>
+
+</body>
+</html>

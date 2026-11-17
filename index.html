@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Наш первый год · Открытка для тебя</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: #383838;
+      color: #e8e2e2;
+      line-height: 1.9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      overflow-x: hidden;
+    }
+
+    /* ===== Верхняя карточка ===== */
+    .card {
+      max-width: 720px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(179, 229, 139, 0.15);
+      border-radius: 32px;
+      padding: 48px 36px 56px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      text-align: center;
+      animation: fadeUp 1.2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .heart {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      animation: beat 1.6s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes beat {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.15); }
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: #b3e58b;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #a9a2a2;
+      margin-bottom: 36px;
+      letter-spacing: 1px;
+    }
+
+    /* ===== Блок с двумя фото ===== */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 36px;
+    }
+
+    .gallery img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      cursor: pointer;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.04);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    .gallery img:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .gallery img:nth-child(2) { grid-column: 2; grid-row: 2; }
+
+    /* ===== Текст поздравления ===== */
+    .message {
+      font-size: 1.05rem;
+      color: #d8d2d2;
+      text-align: left;
+      padding: 0 4px;
+    }
+
+    .message p {
+      margin-bottom: 18px;
+      text-indent: 2em;
+    }
+
+    .message .signature {
+      text-align: right;
+      text-indent: 0;
+      margin-top: 28px;
+      color: #b3e58b;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .footer {
+      margin-top: 36px;
+      font-size: 0.8rem;
+      color: #7c7575;
+      letter-spacing: 1px;
+    }
+
+    /* ===== Кнопки перехода ===== */
+    .nav-buttons {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px; 
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 150px; /* Увеличен отступ, чтобы фото не накладывались на кнопки */
+    }
+
+    .nav-btn {
+      display: inline-block;
+      background: rgba(179, 229, 139, 0.1);
+      color: #b3e58b;
+      text-decoration: none;
+      padding: 15px 40px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: 2px solid #b3e58b;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(179, 229, 139, 0.1);
+    }
+
+    .nav-btn:hover {
+      background: #b3e58b;
+      color: #383838;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(179, 229, 139, 0.3);
+    }
+
+    /* ===== Секция со скролл-анимацией ===== */
+    .scroll-section {
+      max-width: 900px;
+      width: 100%;
+      margin-top: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 80px;
+      padding: 0 10px 80px;
+    }
+
+    .scroll-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .scroll-row.photo-right .scroll-photo { order: 2; }
+    .scroll-row.photo-right .scroll-text  { order: 1; text-align: right; }
+    .scroll-row.photo-left .scroll-photo  { order: 1; }
+    .scroll-row.photo-left .scroll-text   { order: 2; text-align: left; }
+
+    .scroll-photo {
+      overflow: hidden;
+      border-radius: 22px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transform: translateX(-80px);
+      transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scroll-row.photo-right .scroll-photo { transform: translateX(80px); }
+
+    .scroll-photo.visible {
+      opacity: 1;
+      transform: translateX(0) !important;
+    }
+
+    .scroll-photo img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    .scroll-text {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s;
+    }
+
+    .scroll-text.visible { opacity: 1; transform: translateY(0); }
+
+    .scroll-text h3 {
+      color: #b3e58b;
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    .scroll-text p { color: #cfc9c9; font-size: 0.98rem; }
+
+    /* ===== Финальная секция ===== */
+    .final-section {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 100px; /* Увеличен отступ для безопасности */
+      padding: 80px 20px 120px;
+    }
+
+    .heart-button {
+      background: none;
+      border: none;
+      font-size: 5rem;
+      cursor: pointer;
+      color: #b3e58b;
+      transition: transform 0.3s ease, filter 0.3s ease, opacity 0.5s ease;
+      filter: drop-shadow(0 0 20px rgba(179, 229, 139, 0.35));
+      animation: pulse 1.8s ease-in-out infinite;
+      z-index: 10;
+      position: relative;
+    }
+
+    .heart-button:hover {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 35px rgba(179, 229, 139, 0.65));
+    }
+
+    .heart-button:disabled {
+      cursor: default;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.08); }
+    }
+
+    /* ===== Взрыв фотографий ===== */
+    .explosion-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .explosion-photo {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      margin-left: -50px;
+      margin-top: -50px;
+      transform: translate(0, 0) scale(0.2) rotate(0deg);
+      transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.4s ease;
+      pointer-events: none;
+    }
+
+    .explosion-container.explode .explosion-photo {
+      opacity: 1;
+      transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot));
+    }
+
+    .love-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      font-size: 3rem;
+      font-weight: 700;
+      color: #b3e58b;
+      text-shadow: 0 0 30px rgba(179, 229, 139, 0.6);
+      letter-spacing: 3px;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 20;
+      transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .love-text.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .love-text.fade-out {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1.1);
+      transition: opacity 3s ease, transform 3s ease;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 20px 40px; border-radius: 24px; }
+      h1 { font-size: 1.5rem; }
+      .message { font-size: 0.95rem; }
+      .explosion-photo { width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; }
+      .love-text { font-size: 1.8rem; }
+      .nav-btn { width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 700px) {
+      .scroll-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .scroll-row.photo-right .scroll-photo,
+      .scroll-row.photo-left .scroll-photo { order: 1; }
+      .scroll-row.photo-right .scroll-text,
+      .scroll-row.photo-left .scroll-text {
+        order: 2;
+        text-align: left;
+      }
+      .scroll-photo,
+      .scroll-row.photo-right .scroll-photo {
+        transform: translateY(40px);
+      }
+      .scroll-photo.visible {
+        transform: translateY(0) !important;
+      }
+    }
+
+    /* Уменьшаем разлет для мобильных устройств */
+    @media (max-width: 600px) {
+      .explosion-container.explode .explosion-photo {
+        transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)) scale(0.7) rotate(var(--rot));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Верхняя карточка ===== -->
+  <div class="card">
+    <div class="heart">❤️</div>
+    <h1>Наш первый год</h1>
+    <p class="subtitle">365 дней вместе с тобой</p>
+
+    <div class="gallery">
+      <img src="pic2.jpg" alt="Наше фото 1">
+      <img src="pic4.jpg" alt="Наше фото 2">
+    </div>
+
+    <div class="message">
+      <p>Вот и настала та самая невероятно важная дата в нашей жизни. Целый год мы — самые близкие люди друг для друга. Каждый раз я вспоминаю нашу самую первую встречу, когда зимой ты встретила меня у подъезда своей прошлой квартиры. Именно с той встречи началась наша история длиною в целый год. Я думал, что моя жизнь не сможет стать лучше, но тут появилась ты, и вся моя жизнь буквально преобразилась. Теперь я знаю: что бы ни произошло, ты будешь рядом, поддержишь, согреешь и подберёшь правильные слова, чтобы помочь, подбодрить или развеселить. У меня не хватает слов, чтобы описать, как я рад, что ты появилась в моей жизни. Я люблю тебя больше всего на свете!</p>
+      <p class="signature">—— Твой Ваня</p>
+    </div>
+
+    <div class="footer">Сделано с ❤️ специально для тебя</div>
+  </div>
+
+  <!-- ===== Секция со скролл-анимацией ===== -->
+  <section class="scroll-section">
+    <div class="scroll-row photo-right">
+      <div class="scroll-photo">
+        <img src="pic1.jpg" alt="Момент 1">
+      </div>
+      <div class="scroll-text">
+        <h3>Как всё началось</h3>
+        <p>Помнишь наш первый день? Я до сих пор улыбаюсь, когда вспоминаю, как мы познакомились и первый раз встретились!</p>
+      </div>
+    </div>
+
+    <div class="scroll-row photo-left">
+      <div class="scroll-photo">
+        <img src="pic3.jpg" alt="Момент 2">
+      </div>
+      <div class="scroll-text">
+        <h3>Наши первые месяцы</h3>
+        <p>Каждая встреча с тобой была лучшей, хочу вспоминать их снова и снова!</p>
+      </div>
+    </div>
+
+    <div class="scroll-row photo-right">
+      <div class="scroll-photo">
+        <img src="pic20.jpg" alt="Момент 3">
+      </div>
+      <div class="scroll-text">
+        <h3>Совместные просмотры</h3>
+        <p>Иногда самое ценное — просто сидеть рядом и молчать. С тобой и тишина тёплая!</p>
+      </div>
+    </div>
+
+    <div class="scroll-row photo-left">
+      <div class="scroll-photo">
+        <img src="pic16.jpg" alt="Момент 4">
+      </div>
+      <div class="scroll-text">
+        <h3>Кулинары</h3>
+        <p>Мы приготовили вместе столько всего, что уже можно открывать собственный ресторан: том ям, пасты, хот-доги, и, конечно, невероятные ток покки. Каждый раз на кухне получается маленькое приключение — и всегда вкусное.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Блок с кнопками ===== -->
+  <div class="nav-buttons">
+    <a href="game.html" class="nav-btn">🎮 Игра</a>
+    <a href="restaurant.html" class="nav-btn">🍜 Ресторан</a>
+  </div>
+
+  <!-- ===== Финальная секция ===== -->
+  <section class="final-section" id="finalSection">
+    
+    <!-- Контейнер для взрыва -->
+    <div class="explosion-container" id="explosionContainer">
+      <!-- Первое кольцо (14 фото) -->
+      <img src="pic5.jpg" class="explosion-photo first-ring" style="--tx: 250px; --ty: 0px; --rot: 15deg;" alt="Фото 5">
+      <img src="pic6.jpg" class="explosion-photo first-ring" style="--tx: 175px; --ty: -180px; --rot: -25deg;" alt="Фото 6">
+      <img src="pic7.jpg" class="explosion-photo first-ring" style="--tx: 0px; --ty: -250px; --rot: 40deg;" alt="Фото 7">
+      <img src="pic8.jpg" class="explosion-photo first-ring" style="--tx: -175px; --ty: -180px; --rot: -10deg;" alt="Фото 8">
+      <img src="pic9.jpg" class="explosion-photo first-ring" style="--tx: -250px; --ty: 0px; --rot: 30deg;" alt="Фото 9">
+      <img src="pic10.jpg" class="explosion-photo first-ring" style="--tx: -175px; --ty: 180px; --rot: -35deg;" alt="Фото 10">
+      <img src="pic11.jpg" class="explosion-photo first-ring" style="--tx: 0px; --ty: 250px; --rot: 45deg;" alt="Фото 11">
+      <img src="pic12.jpg" class="explosion-photo first-ring" style="--tx: 175px; --ty: 180px; --rot: -15deg;" alt="Фото 12">
+      <img src="pic13.jpg" class="explosion-photo first-ring" style="--tx: 300px; --ty: -100px; --rot: 20deg;" alt="Фото 13">
+      <img src="pic14.jpg" class="explosion-photo first-ring" style="--tx: 300px; --ty: 100px; --rot: -40deg;" alt="Фото 14">
+      <img src="pic15.jpg" class="explosion-photo first-ring" style="--tx: -300px; --ty: 100px; --rot: 10deg;" alt="Фото 15">
+      <img src="pic17.jpg" class="explosion-photo first-ring" style="--tx: -300px; --ty: -100px; --rot: -20deg;" alt="Фото 17">
+      <img src="pic18.jpg" class="explosion-photo first-ring" style="--tx: 100px; --ty: -300px; --rot: 35deg;" alt="Фото 18">
+      <img src="pic19.jpg" class="explosion-photo first-ring" style="--tx: -100px; --ty: -300px; --rot: -5deg;" alt="Фото 19">
+
+      <!-- Второе кольцо (13 фото) -->
+      <img src="pic21.jpg" class="explosion-photo second-ring" style="--tx: 450px; --ty: 0px; --rot: 20deg;" alt="Фото 21">
+      <img src="pic22.jpg" class="explosion-photo second-ring" style="--tx: 315px; --ty: -320px; --rot: -30deg;" alt="Фото 22">
+      <img src="pic23.jpg" class="explosion-photo second-ring" style="--tx: 0px; --ty: -450px; --rot: 50deg;" alt="Фото 23">
+      <img src="pic24.jpg" class="explosion-photo second-ring" style="--tx: -315px; --ty: -320px; --rot: -15deg;" alt="Фото 24">
+      <img src="pic25.jpg" class="explosion-photo second-ring" style="--tx: -450px; --ty: 0px; --rot: 25deg;" alt="Фото 25">
+      <img src="pic26.jpg" class="explosion-photo second-ring" style="--tx: -315px; --ty: 320px; --rot: -45deg;" alt="Фото 26">
+      <img src="pic27.jpg" class="explosion-photo second-ring" style="--tx: 0px; --ty: 450px; --rot: 60deg;" alt="Фото 27">
+      <img src="pic28.jpg" class="explosion-photo second-ring" style="--tx: 315px; --ty: 320px; --rot: -25deg;" alt="Фото 28">
+      <img src="pic29.jpg" class="explosion-photo second-ring" style="--tx: 520px; --ty: -150px; --rot: 35deg;" alt="Фото 29">
+      <img src="pic30.jpg" class="explosion-photo second-ring" style="--tx: -520px; --ty: -150px; --rot: -50deg;" alt="Фото 30">
+      <img src="pic31.jpg" class="explosion-photo second-ring" style="--tx: 520px; --ty: 150px; --rot: 15deg;" alt="Фото 31">
+      <img src="pic32.jpg" class="explosion-photo second-ring" style="--tx: -520px; --ty: 150px; --rot: -35deg;" alt="Фото 32">
+      <img src="pic33.jpg" class="explosion-photo second-ring" style="--tx: 150px; --ty: -520px; --rot: 10deg;" alt="Фото 33">
+    </div>
+
+    <!-- Текст признания -->
+    <div class="love-text" id="loveText">Я люблю тебя !!</div>
+
+    <button class="heart-button" id="heartButton" aria-label="Нажми на сердечко">❤️</button>
+  </section>
+
+  <script>
+    // ===== Скролл-анимация =====
+    const items = document.querySelectorAll('.scroll-photo, .scroll-text');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        } else {
+          entry.target.classList.remove('visible');
+        }
+      });
+    }, {
+      threshold: 0.25,
+      rootMargin: '0px 0px -10% 0px'
+    });
+
+    items.forEach((el) => observer.observe(el));
+
+    // ===== Финальный «взрыв» фотографий =====
+    const heartButton = document.getElementById('heartButton');
+    const explosionContainer = document.getElementById('explosionContainer');
+    const loveText = document.getElementById('loveText');
+    const finalSection = document.getElementById('finalSection');
+
+    let exploded = false;
+
+    heartButton.addEventListener('click', () => {
+      if (exploded) return;
+      exploded = true;
+
+      const sectionRect = finalSection.getBoundingClientRect();
+      const buttonRect = heartButton.getBoundingClientRect();
+      
+      const startX = buttonRect.left - sectionRect.left + buttonRect.width / 2;
+      const startY = buttonRect.top - sectionRect.top + buttonRect.height / 2;
+
+      const photos = document.querySelectorAll('.explosion-photo');
+      photos.forEach(photo => {
+        photo.style.left = startX + 'px';
+        photo.style.top = startY + 'px';
+      });
+
+      heartButton.style.transform = 'scale(0)';
+      heartButton.style.opacity = '0';
+      
+      setTimeout(() => {
+        explosionContainer.classList.add('explode');
+      }, 200);
+
+      setTimeout(() => { loveText.classList.add('show'); }, 1200);
+      setTimeout(() => {
+        loveText.classList.remove('show');
+        loveText.classList.add('fade-out');
+      }, 4800);
+    });
+  </script>
+
+</body>
+</html>
