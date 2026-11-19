@@ -33,6 +33,109 @@
       overflow-x: hidden;
     }
 
+    /* ===== ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ В ИГРУ" ===== */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+      transition: opacity 0.6s ease;
+    }
+
+    .welcome-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .welcome-box {
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      padding: 40px 50px;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .welcome-box h1 {
+      font-size: 1.5rem;
+      color: #ffaa00;
+      text-shadow: 3px 3px 0px #3f3f3f, 4px 4px 0px #000;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+
+    .welcome-btn {
+      background: #5b8731;
+      color: #fff;
+      text-decoration: none;
+      padding: 15px 40px;
+      font-size: 1rem;
+      font-family: 'Press Start 2P', monospace;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      text-shadow: 2px 2px 0px #2b3f17;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .welcome-btn:active {
+      box-shadow: inset 4px 4px 0px #3d5c20, inset -4px -4px 0px #7ebc42;
+      transform: translate(2px, 2px);
+    }
+
+    /* ===== ЭКРАН ЗАГРУЗКИ ===== */
+    .loading-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 4000;
+    }
+
+    .loading-screen.active {
+      display: flex;
+    }
+
+    .loading-text {
+      font-size: 1.2rem;
+      color: #fff;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: 300px;
+      height: 30px;
+      border: 4px solid #fff;
+      padding: 4px;
+      background: #3f3f3f;
+      box-shadow: inset 4px 4px 0px #222, inset -4px -4px 0px #555;
+      position: relative;
+    }
+
+    .loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #5b8731;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      transition: width 0.1s linear;
+    }
+
+    /* ===== ОСТАЛЬНОЙ СТИЛЬ ===== */
     .back-btn {
       position: absolute;
       top: 20px;
@@ -115,7 +218,6 @@
       image-rendering: pixelated;
     }
 
-    /* ===== ОВЕРЛЕЙ ПРОЙДЕН ===== */
     .game-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -152,7 +254,6 @@
       line-height: 1.8;
     }
 
-    /* ===== ОБНОВЛЕННЫЕ ТАНЦУЮЩИЕ ПЕРСОНАЖИ ===== */
     .dancing-characters {
       display: none;
       justify-content: center;
@@ -193,7 +294,7 @@
       height: 30px;
       width: auto;
       bottom: 20px;
-      right: -15px; /* Факел в руке справа */
+      right: -15px;
       image-rendering: pixelated;
       filter: drop-shadow(0 0 10px rgba(255, 170, 0, 0.8));
     }
@@ -251,10 +352,28 @@
       .dancing-character-item, .dancing-character-item img.character { height: 70px; }
       .dancing-character-item img.torch { height: 22px; bottom: 15px; right: -10px; }
       .game-btn { padding: 12px 20px; font-size: 0.8rem; }
+      .welcome-box h1 { font-size: 1.1rem; }
+      .welcome-btn { font-size: 0.8rem; padding: 12px 25px; }
     }
   </style>
 </head>
 <body>
+
+  <!-- ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ В ИГРУ" -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-box">
+      <h1>Добро пожаловать в игру!</h1>
+      <button class="welcome-btn" id="enterBtn">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН ЗАГРУЗКИ -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-text">Загрузка...</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+  </div>
 
   <a href="index.html" class="back-btn">← Назад к открытке</a>
 
@@ -265,12 +384,10 @@
     <div class="game-wrapper">
       <canvas id="gameCanvas" width="900" height="600"></canvas>
       
-      <!-- Оверлей прохождения уровня -->
       <div id="gameOverlay" class="game-overlay">
         <h3 id="overlayTitle">Уровень пройден!</h3>
         <p id="overlayText">Ты добрался до заветной двери.</p>
         
-        <!-- ТАНЦУЮЩИЕ ПЕРСОНАЖИ С ФАКЕЛАМИ -->
         <div class="dancing-characters" id="dancingChars">
           <div class="dancing-character-item">
             <img src="vanya.png" alt="Ваня" class="character">
@@ -290,6 +407,12 @@
     </div>
   </section>
 
+  <!-- Звуки -->
+  <audio id="ariamathMusic" loop preload="auto">
+    <source src="ariamath.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickSound" src="minecraft_click.mp3" preload="auto"></audio>
+
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -300,6 +423,13 @@
     const mainBtn = document.getElementById('mainBtn');
     const dancingChars = document.getElementById('dancingChars');
 
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    const enterBtn = document.getElementById('enterBtn');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingBarFill = document.getElementById('loadingBarFill');
+    const ariamathMusic = document.getElementById('ariamathMusic');
+    const clickSound = document.getElementById('clickSound');
+
     // Картинки
     const imgMashulya = new Image();
     imgMashulya.src = 'mashulya.png';
@@ -308,11 +438,71 @@
     const imgTorch = new Image();
     imgTorch.src = 'fackel.png';
     const imgHeart = new Image();
-    imgHeart.src = 'heart.png'; // НОВАЯ КАРТИНКА СЕРДЕЧКА
-    
-    // ФОН ИГРОВОГО ПОЛЯ
+    imgHeart.src = 'heart.png';
     const imgBgGame = new Image();
     imgBgGame.src = 'bgpodzemele.jpg';
+
+    // Универсальный звук клика
+    function playClickSound() {
+      clickSound.volume = 0.4;
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => console.log("Ошибка клика:", e));
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, a')) {
+        playClickSound();
+      }
+    });
+
+    enterBtn.addEventListener('click', () => {
+      welcomeOverlay.classList.add('hidden');
+      loadingScreen.classList.add('active');
+      loadingBarFill.style.width = '0%';
+
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 5;
+          loadingBarFill.style.width = progress + '%';
+        }
+      }, 100);
+
+      const allImages = Array.from(document.querySelectorAll('img')).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.addEventListener('load', resolve);
+          img.addEventListener('error', resolve);
+        });
+      });
+
+      const musicReady = new Promise(resolve => {
+        if (ariamathMusic.readyState >= 3) {
+          resolve();
+        } else {
+          ariamathMusic.addEventListener('canplaythrough', resolve, { once: true });
+          setTimeout(resolve, 5000); 
+        }
+      });
+
+      Promise.all([...allImages, musicReady]).then(() => {
+        clearInterval(progressInterval);
+        loadingBarFill.style.width = '100%';
+
+        setTimeout(() => {
+          loadingScreen.classList.remove('active');
+          
+          ariamathMusic.volume = 0.4;
+          ariamathMusic.play()
+            .then(() => {
+              console.log("Музыка ariamath.mp3 заиграла!");
+            })
+            .catch(e => {
+              alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+            });
+        }, 400); 
+      });
+    });
 
     const playerWidth = 50;
     const playerHeight = 50;
@@ -382,7 +572,7 @@
         ],
         door: { x: 750, y: 70, w: 60, h: 60 },
         hearts: [
-          { x: 200, y: 520, w: 30, h: 30, collected: false }, // Немного увеличил размер под картинку
+          { x: 200, y: 520, w: 30, h: 30, collected: false },
           { x: 450, y: 410, w: 30, h: 30, collected: false },
           { x: 700, y: 300, w: 30, h: 30, collected: false },
           { x: 200, y: 190, w: 30, h: 30, collected: false }
@@ -469,7 +659,6 @@
       ctx.globalAlpha = 1;
     }
 
-    // ===== НОВАЯ ОТРИСОВКА СЕРДЕЧКА =====
     function drawHeart(x, y, w, h) {
       if (imgHeart.complete && imgHeart.naturalHeight !== 0) {
         ctx.save();
@@ -478,7 +667,6 @@
         ctx.drawImage(imgHeart, x, y, w, h);
         ctx.restore();
       } else {
-        // Запасной вариант, если картинки нет
         ctx.fillStyle = '#ff3333';
         ctx.fillRect(x, y, w, h);
       }

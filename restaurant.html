@@ -329,7 +329,6 @@
 
     .learn-more:hover { color: #fff; }
 
-    /* ===== СЕКЦИЯ КОРЗИНЫ ===== */
     .cart-section {
       margin-top: 40px;
       background: rgba(0, 0, 0, 0.4);
@@ -350,7 +349,6 @@
       text-shadow: 2px 2px 0px #000;
     }
 
-    /* ===== СПИСОК ВЫБРАННЫХ БЛЮД ===== */
     .selected-list {
       width: 100%;
       text-align: center;
@@ -375,7 +373,6 @@
       font-size: 0.75rem;
     }
 
-    /* ===== ОВЕРЛЕЙ ===== */
     .overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -406,7 +403,6 @@
       image-rendering: pixelated;
     }
 
-    /* ===== СПИСОК В ОКНЕ СПАСИБО ===== */
     .overlay-order-list {
       margin-top: 20px;
       background: #7c7c7c;
@@ -519,7 +515,6 @@
   </section>
 
   <div class="menu-grid" id="menu">
-    <!-- Добавлено событие для предотвращения клика по ссылке -->
     <div class="dish-card" onclick="toggleItem(this)">
       <img src="Жареная_курятина_(до_Texture_Update).png" alt="Горячие бутерброды" class="dish-img">
       <h2>Горячие бутерброды</h2>
@@ -565,9 +560,7 @@
 
   <div class="cart-section">
     <div class="cart-info">Выбрано блюд: <span id="cartCount">0</span></div>
-    <!-- СПИСОК ВЫБРАННЫХ БЛЮД -->
     <div class="selected-list" id="selectedList">
-      <!-- Сюда скрипт будет добавлять блюда -->
     </div>
     <button class="order-btn" onclick="submitOrder()">Оформить заказ</button>
   </div>
@@ -576,11 +569,9 @@
     <img src="bakersobaka.gif" alt="Спасибо!" class="overlay-img">
     <div class="overlay-text">Спасибо за заказ!</div>
     
-    <!-- СПИСОК БЛЮД В ОКНЕ СПАСИБО -->
     <div class="overlay-order-list">
       <h3>Ваш заказ:</h3>
       <ul id="overlayOrderList">
-        <!-- Сюда скрипт будет добавлять блюда -->
       </ul>
     </div>
 
@@ -592,16 +583,31 @@
   <audio id="bgMusic" loop preload="auto">
     <source src="music.mp3" type="audio/mpeg">
   </audio>
+  <audio id="clickSound" src="minecraft_click.mp3" preload="auto"></audio>
 
   <script>
-    // ===== ЛОГИКА ЗАГРУЗКИ И ВХОДА =====
     const welcomeOverlay = document.getElementById('welcomeOverlay');
     const enterBtn = document.getElementById('enterBtn');
     const loadingScreen = document.getElementById('loadingScreen');
     const loadingBarFill = document.getElementById('loadingBarFill');
     const bgMusic = document.getElementById('bgMusic');
     const musicToggle = document.getElementById('musicToggle');
+    const clickSound = document.getElementById('clickSound');
     let isMusicPlaying = false;
+
+    // Универсальный звук клика
+    function playClickSound() {
+      clickSound.volume = 0.4;
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => console.log("Ошибка клика:", e));
+    }
+
+    // Добавляем клик ко всем кнопкам
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, a, .dish-card')) {
+        playClickSound();
+      }
+    });
 
     enterBtn.addEventListener('click', () => {
       welcomeOverlay.classList.add('hidden');
@@ -656,7 +662,6 @@
       });
     });
 
-    // ===== КНОПКА ВКЛ/ВЫКЛ МУЗЫКИ =====
     musicToggle.addEventListener('click', () => {
       if (isMusicPlaying) {
         bgMusic.pause();
@@ -678,7 +683,6 @@
       }
     });
 
-    // ===== КОРЗИНА И СПИСОК =====
     function toggleItem(card) {
       card.classList.toggle('selected');
       updateCartCount();
@@ -688,9 +692,8 @@
       const selected = document.querySelectorAll('.dish-card.selected');
       document.getElementById('cartCount').innerText = selected.length;
 
-      // Обновляем список под корзиной
       const listContainer = document.getElementById('selectedList');
-      listContainer.innerHTML = ''; // Очищаем
+      listContainer.innerHTML = '';
 
       if (selected.length > 0) {
         const ul = document.createElement('ul');
@@ -704,7 +707,6 @@
       }
     }
 
-    // ===== ОФОРМЛЕНИЕ ЗАКАЗА =====
     function submitOrder() {
       const selected = document.querySelectorAll('.dish-card.selected');
       
@@ -713,20 +715,17 @@
         return;
       }
 
-      // Звук level up
       const audio = document.getElementById('levelUpSound');
       audio.volume = 0.5;
       audio.play().catch(e => console.log("Ошибка воспроизведения звука:", e));
 
-      // Анимация повара
       const bakerStatic = document.getElementById('bakerStatic');
       const bakerGif = document.getElementById('bakerGif');
       bakerStatic.style.opacity = '0';
       bakerGif.style.opacity = '1';
 
-      // Формируем список блюд для окна "Спасибо"
       const overlayList = document.getElementById('overlayOrderList');
-      overlayList.innerHTML = ''; // Очищаем старый список
+      overlayList.innerHTML = '';
 
       selected.forEach(card => {
         const dishName = card.querySelector('h2').innerText;
@@ -735,7 +734,6 @@
         overlayList.appendChild(li);
       });
 
-      // Показываем финальную плашку
       const overlay = document.getElementById('finalOverlay');
       overlay.classList.add('show');
     }
