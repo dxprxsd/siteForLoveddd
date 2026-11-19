@@ -11,11 +11,14 @@
 
     body {
       font-family: 'Press Start 2P', monospace;
-      background-color: #2c2c2c;
+      /* ===== НОВЫЙ ФОН С ЗАТЕМНЕНИЕМ ===== */
+      background-color: #2c2c2c; /* Запасной цвет */
       background-image: 
-        linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
-        url('data:image/svg+xml;utf8,<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="%233d3d3d"/><rect x="0" y="0" width="32" height="32" fill="%234b4b4b"/><rect x="32" y="32" width="32" height="32" fill="%234b4b4b"/></svg>');
-      background-size: 64px 64px;
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), /* Затемнение 60% */
+        url('imagebgrestr.jpg');
+      background-size: cover; /* Растягиваем на весь экран */
+      background-position: center; /* Центрируем */
+      background-attachment: fixed; /* Фон не скроллится */
       color: #fff;
       line-height: 1.6;
       min-height: 100vh;
@@ -86,6 +89,47 @@
     .welcome-btn:active {
       box-shadow: inset 4px 4px 0px #3d5c20, inset -4px -4px 0px #7ebc42;
       transform: translate(2px, 2px);
+    }
+
+    /* ===== ЭКРАН ЗАГРУЗКИ В СТИЛЕ MINECRAFT ===== */
+    .loading-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+    }
+
+    .loading-screen.active {
+      display: flex;
+    }
+
+    .loading-text {
+      font-size: 1.2rem;
+      color: #fff;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: 300px;
+      height: 30px;
+      border: 4px solid #fff;
+      padding: 4px;
+      background: #3f3f3f;
+      box-shadow: inset 4px 4px 0px #222, inset -4px -4px 0px #555;
+      position: relative;
+    }
+
+    .loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #5b8731;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      transition: width 0.1s linear;
     }
 
     /* ===== ОСТАЛЬНОЙ СТИЛЬ ===== */
@@ -388,6 +432,14 @@
     </div>
   </div>
 
+  <!-- ЭКРАН ЗАГРУЗКИ В СТИЛЕ MINECRAFT -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-text">Загрузка...</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+  </div>
+
   <!-- Верхние кнопки управления -->
   <div class="top-controls">
     <a href="index.html" class="mc-btn">← Назад</a>
@@ -463,35 +515,71 @@
 
   <!-- Звуки -->
   <audio id="levelUpSound" src="xp-level-up.mp3" preload="auto"></audio>
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop preload="auto">
     <source src="music.mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    // ===== ВХОД И ЗАПУСК МУЗЫКИ (с показом точной ошибки) =====
+    // ===== ЛОГИКА ЗАГРУЗКИ И ВХОДА =====
     const welcomeOverlay = document.getElementById('welcomeOverlay');
     const enterBtn = document.getElementById('enterBtn');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingBarFill = document.getElementById('loadingBarFill');
     const bgMusic = document.getElementById('bgMusic');
     const musicToggle = document.getElementById('musicToggle');
     let isMusicPlaying = false;
 
     enterBtn.addEventListener('click', () => {
       welcomeOverlay.classList.add('hidden');
+      loadingScreen.classList.add('active');
+      loadingBarFill.style.width = '0%';
 
-      // Воспроизводим music.mp3 и показываем точную ошибку, если не заиграет
-      bgMusic.volume = 0.3;
-      bgMusic.play()
-        .then(() => {
-          console.log("Музыка заиграла!");
-          isMusicPlaying = true;
-          musicToggle.innerText = '🔊';
-          musicToggle.style.animation = 'none';
-        })
-        .catch(e => {
-          // Всплывающее окно с точной причиной
-          alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
-          console.error("Детали ошибки:", e);
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 5;
+          loadingBarFill.style.width = progress + '%';
+        }
+      }, 100);
+
+      const allImages = Array.from(document.querySelectorAll('img')).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.addEventListener('load', resolve);
+          img.addEventListener('error', resolve);
         });
+      });
+
+      const musicReady = new Promise(resolve => {
+        if (bgMusic.readyState >= 3) {
+          resolve();
+        } else {
+          bgMusic.addEventListener('canplaythrough', resolve, { once: true });
+          setTimeout(resolve, 5000); 
+        }
+      });
+
+      Promise.all([...allImages, musicReady]).then(() => {
+        clearInterval(progressInterval);
+        loadingBarFill.style.width = '100%';
+
+        setTimeout(() => {
+          loadingScreen.classList.remove('active');
+          
+          bgMusic.volume = 0.3;
+          bgMusic.play()
+            .then(() => {
+              console.log("Музыка заиграла без задержек!");
+              isMusicPlaying = true;
+              musicToggle.innerText = '🔊';
+              musicToggle.style.animation = 'none';
+            })
+            .catch(e => {
+              alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+              console.error("Детали ошибки:", e);
+            });
+        }, 400); 
+      });
     });
 
     // ===== КНОПКА ВКЛ/ВЫКЛ МУЗЫКИ =====
@@ -534,18 +622,15 @@
         return;
       }
 
-      // Звук level up
       const audio = document.getElementById('levelUpSound');
       audio.volume = 0.5;
       audio.play().catch(e => console.log("Ошибка воспроизведения звука:", e));
 
-      // Анимация повара
       const bakerStatic = document.getElementById('bakerStatic');
       const bakerGif = document.getElementById('bakerGif');
       bakerStatic.style.opacity = '0';
       bakerGif.style.opacity = '1';
 
-      // Показываем финальную плашку
       const overlay = document.getElementById('finalOverlay');
       overlay.classList.add('show');
     }
