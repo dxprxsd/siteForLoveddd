@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Наш ресторан · Наш первый год</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       font-family: 'Press Start 2P', monospace;
@@ -21,6 +21,7 @@
       color: #fff;
       line-height: 1.6;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -83,6 +84,8 @@
       display: inline-block;
       cursor: pointer;
       transition: all 0.1s;
+      touch-action: manipulation;
+      min-height: 44px;
     }
 
     .welcome-btn:active {
@@ -156,6 +159,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: manipulation;
+      min-height: 44px;
+      min-width: 44px;
     }
 
     .mc-btn:active {
@@ -223,6 +229,8 @@
       display: inline-block;
       cursor: pointer;
       transition: all 0.1s;
+      touch-action: manipulation;
+      min-height: 48px;
     }
 
     .order-btn:active {
@@ -282,6 +290,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      touch-action: manipulation;
     }
 
     .dish-card:active {
@@ -449,11 +458,24 @@
       display: inline-block;
       transition: all 0.1s;
       cursor: pointer;
+      touch-action: manipulation;
+      min-height: 48px;
     }
 
     .overlay-btn:active {
       box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
       transform: translate(2px, 2px);
+    }
+
+    /* ===== МОБИЛЬНАЯ СОВМЕСТИМОСТЬ ===== */
+    @media (hover: none) and (pointer: coarse) {
+      body {
+        background-attachment: scroll;
+      }
+    }
+
+    @media (hover: none) {
+      .learn-more:hover { color: #ffaa00; }
     }
 
     @media (max-width: 900px) {
@@ -464,17 +486,28 @@
 
     @media (max-width: 600px) {
       .top-controls { top: 10px; left: 10px; gap: 10px; }
-      .mc-btn { padding: 8px 12px; font-size: 0.7rem; }
-      .sound-btn { width: 36px; height: 36px; font-size: 1rem; }
-      .hero-section { padding: 15px; }
+      .mc-btn { padding: 8px 12px; font-size: 0.7rem; min-height: 44px; min-width: 44px; }
+      .sound-btn { width: 44px; height: 44px; font-size: 1rem; }
+      .hero-section { padding: 20px 15px; }
       .hero-text h1 { font-size: 1.4rem; }
-      .order-btn { font-size: 0.8rem; padding: 10px 20px; }
-      .cart-section { padding: 15px; }
-      .overlay-btn { font-size: 0.8rem; padding: 10px 20px; }
-      .welcome-box { padding: 25px 20px; }
+      .order-btn { font-size: 0.8rem; padding: 12px 20px; width: 100%; text-align: center; }
+      .cart-section { padding: 20px 15px; }
+      .overlay-btn { font-size: 0.8rem; padding: 12px 20px; }
+      .welcome-box { padding: 30px 20px; }
       .welcome-box h1 { font-size: 1rem; }
       .welcome-btn { font-size: 0.8rem; padding: 12px 25px; }
       .overlay-order-list li { font-size: 0.65rem; }
+      .overlay-order-list { max-width: 92%; padding: 15px; }
+      .overlay-text { font-size: 1.4rem; }
+      .overlay-img { width: 200px; }
+      .loading-bar-container { width: 80%; max-width: 300px; }
+      .dish-card { padding: 24px 16px; }
+      .hero-img, .hero-gif { max-width: 100%; }
+    }
+
+    @media (max-width: 380px) {
+      .menu-grid { grid-template-columns: 1fr; }
+      .hero-text h1 { font-size: 1.2rem; }
     }
   </style>
 </head>
@@ -609,6 +642,15 @@
       }
     });
 
+    // Безопасная плашка вместо alert (не блокирует браузер)
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#5b8731;color:#fff;padding:12px 20px;border:3px solid #000;z-index:9999;font-size:0.7rem;font-family:"Press Start 2P",monospace;text-align:center;max-width:90%;box-shadow:inset -3px -3px 0px #3d5c20, inset 3px 3px 0px #7ebc42;';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
     enterBtn.addEventListener('click', () => {
       welcomeOverlay.classList.add('hidden');
       loadingScreen.classList.add('active');
@@ -655,8 +697,8 @@
               musicToggle.style.animation = 'none';
             })
             .catch(e => {
-              alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
-              console.error("Детали ошибки:", e);
+              console.warn("Ошибка музыки:", e);
+              showToast("Музыка недоступна");
             });
         }, 400); 
       });
@@ -677,8 +719,8 @@
             musicToggle.style.animation = 'none';
           })
           .catch(e => {
-            alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
-            console.error("Детали ошибки:", e);
+            console.warn("Ошибка музыки:", e);
+            showToast("Музыка недоступна");
           });
       }
     });
@@ -711,7 +753,7 @@
       const selected = document.querySelectorAll('.dish-card.selected');
       
       if (selected.length === 0) {
-        alert("Пожалуйста, выберите хотя бы одно блюдо!");
+        showToast("Пожалуйста, выберите хотя бы одно блюдо!");
         return;
       }
 

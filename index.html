@@ -2,13 +2,14 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Наш первый год · Открытка для тебя</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -17,6 +18,7 @@
       color: #e8e2e2;
       line-height: 1.9;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -30,6 +32,7 @@
       width: 100%;
       background: rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(179, 229, 139, 0.15);
       border-radius: 32px;
       padding: 48px 36px 56px;
@@ -86,6 +89,15 @@
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
       transition: transform 0.35s ease, box-shadow 0.35s ease;
       cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    /* Фолбэк для старых Android WebView без aspect-ratio */
+    @supports not (aspect-ratio: 1 / 1) {
+      .gallery img {
+        height: 0;
+        padding-bottom: 100%;
+      }
     }
 
     .gallery img:hover {
@@ -132,7 +144,7 @@
       margin-top: 20px; 
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 150px; /* Увеличен отступ, чтобы фото не накладывались на кнопки */
+      margin-bottom: 150px;
     }
 
     .nav-btn {
@@ -147,6 +159,11 @@
       border: 2px solid #b3e58b;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(179, 229, 139, 0.1);
+      touch-action: manipulation;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .nav-btn:hover {
@@ -202,6 +219,13 @@
       object-fit: cover;
     }
 
+    @supports not (aspect-ratio: 4 / 3) {
+      .scroll-photo img {
+        height: 0;
+        padding-bottom: 75%;
+      }
+    }
+
     .scroll-text {
       opacity: 0;
       transform: translateY(30px);
@@ -225,11 +249,12 @@
       width: 100%;
       max-width: 1100px;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-top: 100px; /* Увеличен отступ для безопасности */
+      margin-top: 100px;
       padding: 80px 20px 120px;
     }
 
@@ -244,6 +269,7 @@
       animation: pulse 1.8s ease-in-out infinite;
       z-index: 10;
       position: relative;
+      touch-action: manipulation;
     }
 
     .heart-button:hover {
@@ -285,6 +311,7 @@
       transform: translate(0, 0) scale(0.2) rotate(0deg);
       transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.4s ease;
       pointer-events: none;
+      will-change: transform, opacity;
     }
 
     .explosion-container.explode .explosion-photo {
@@ -320,13 +347,11 @@
       transition: opacity 3s ease, transform 3s ease;
     }
 
-    @media (max-width: 480px) {
-      .card { padding: 32px 20px 40px; border-radius: 24px; }
-      h1 { font-size: 1.5rem; }
-      .message { font-size: 0.95rem; }
-      .explosion-photo { width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; }
-      .love-text { font-size: 1.8rem; }
-      .nav-btn { width: 100%; text-align: center; }
+    /* ===== МОБИЛЬНАЯ СОВМЕСТИМОСТЬ ===== */
+    @media (hover: none) {
+      .gallery img:hover { transform: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); }
+      .nav-btn:hover { background: rgba(179, 229, 139, 0.1); color: #b3e58b; transform: none; box-shadow: 0 4px 15px rgba(179, 229, 139, 0.1); }
+      .heart-button:hover { transform: none; filter: drop-shadow(0 0 20px rgba(179, 229, 139, 0.35)); }
     }
 
     @media (max-width: 700px) {
@@ -350,11 +375,37 @@
       }
     }
 
-    /* Уменьшаем разлет для мобильных устройств */
     @media (max-width: 600px) {
-      .explosion-container.explode .explosion-photo {
-        transform: translate(calc(var(--tx) * 0.6), calc(var(--ty) * 0.6)) scale(0.7) rotate(var(--rot));
+      .final-section { padding: 60px 15px 80px; }
+      .nav-buttons { margin-bottom: 80px; gap: 14px; }
+      .nav-btn { padding: 14px 28px; font-size: 1rem; }
+
+      .love-text {
+        font-size: 1.6rem;
+        white-space: normal;
+        text-align: center;
+        width: 90%;
+        line-height: 1.3;
       }
+
+      .explosion-container.explode .explosion-photo {
+        transform: translate(calc(var(--tx) * 0.45), calc(var(--ty) * 0.45)) scale(0.6) rotate(var(--rot));
+      }
+
+      .explosion-photo { width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; }
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 20px 40px; border-radius: 24px; }
+      h1 { font-size: 1.5rem; }
+      .message { font-size: 0.95rem; }
+      .nav-btn { width: 100%; text-align: center; }
+      .heart-button { font-size: 4rem; }
+    }
+
+    @media (max-width: 380px) {
+      .love-text { font-size: 1.3rem; }
+      .explosion-photo { width: 50px; height: 50px; margin-left: -25px; margin-top: -25px; }
     }
   </style>
 </head>
@@ -484,8 +535,8 @@
         }
       });
     }, {
-      threshold: 0.25,
-      rootMargin: '0px 0px -10% 0px'
+      threshold: 0.15,
+      rootMargin: '0px 0px -5% 0px'
     });
 
     items.forEach((el) => observer.observe(el));

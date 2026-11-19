@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Подземелье · Наш первый год</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -28,9 +28,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
+      justify-content: flex-start; /* было center — из-за этого всё «уезжало» */
+      padding: 20px 10px 120px;    /* нижний отступ под мобильные кнопки */
       overflow-x: hidden;
+      touch-action: manipulation;
     }
 
     /* ===== ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ В ИГРУ" ===== */
@@ -240,6 +241,7 @@
       width: 100%;
       height: auto;
       image-rendering: pixelated;
+      touch-action: none; /* чтобы свайпы не скроллили страницу во время игры */
     }
 
     .game-overlay {
@@ -368,6 +370,56 @@
       box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
     }
 
+    /* ===== МОБИЛЬНЫЕ КНОПКИ УПРАВЛЕНИЯ ===== */
+    .mobile-controls {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      gap: 20px;
+      z-index: 500;
+      padding: 10px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .mobile-controls.visible {
+      display: flex;
+    }
+
+    .mobile-btn {
+      width: 70px;
+      height: 70px;
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      color: #fff;
+      font-size: 2rem;
+      font-family: 'Press Start 2P', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      transition: all 0.05s;
+    }
+
+    .mobile-btn.active,
+    .mobile-btn:active {
+      box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
+      transform: translate(2px, 2px);
+    }
+
+    @media (max-width: 900px) {
+      .game-section { padding-bottom: 100px; }
+      .game-wrapper { max-width: 100%; }
+    }
+
     @media (max-width: 600px) {
       .top-controls { top: 10px; left: 10px; gap: 10px; }
       .mc-btn { padding: 8px 12px; font-size: 0.7rem; }
@@ -380,6 +432,8 @@
       .game-btn { padding: 12px 20px; font-size: 0.8rem; }
       .welcome-box h1 { font-size: 1.1rem; }
       .welcome-btn { font-size: 0.8rem; padding: 12px 25px; }
+      .mobile-btn { width: 60px; height: 60px; font-size: 1.5rem; }
+      .mobile-controls { gap: 15px; bottom: 10px; }
     }
   </style>
 </head>
@@ -401,7 +455,7 @@
     </div>
   </div>
 
-  <!-- Верхние кнопки управления (как в ресторане) -->
+  <!-- Верхние кнопки управления -->
   <div class="top-controls">
     <a href="index.html" class="mc-btn">← Назад</a>
     <button id="musicToggle" class="mc-btn sound-btn" title="Включить/выключить музыку">🔇</button>
@@ -436,6 +490,13 @@
       </div>
     </div>
   </section>
+
+  <!-- МОБИЛЬНЫЕ КНОПКИ УПРАВЛЕНИЯ -->
+  <div class="mobile-controls" id="mobileControls">
+    <div class="mobile-btn" id="btnLeft" data-key="left">◀</div>
+    <div class="mobile-btn" id="btnUp" data-key="up">▲</div>
+    <div class="mobile-btn" id="btnRight" data-key="right">▶</div>
+  </div>
 
   <!-- Звуки -->
   <audio id="ariamathMusic" loop preload="auto">
@@ -509,18 +570,15 @@
         });
       });
 
-      // Ждём готовности аудио
       const musicReady = new Promise(resolve => {
         if (ariamathMusic.readyState >= 3) {
           resolve();
         } else {
           ariamathMusic.addEventListener('canplaythrough', resolve, { once: true });
-          // Страховка на случай, если браузер не может загрузить
           setTimeout(resolve, 5000); 
         }
       });
 
-      // Ждём, пока загрузятся все картинки и музыка
       Promise.all([...allImages, musicReady]).then(() => {
         clearInterval(progressInterval);
         loadingBarFill.style.width = '100%';
@@ -528,7 +586,6 @@
         setTimeout(() => {
           loadingScreen.classList.remove('active');
           
-          // Запускаем музыку
           ariamathMusic.volume = 0.4;
           ariamathMusic.play()
             .then(() => {
@@ -539,7 +596,6 @@
             })
             .catch(e => {
               console.error("Ошибка музыки:", e);
-              // Если браузер блокирует автоплей — пользователь сможет нажать кнопку вручную
             });
         }, 400); 
       });
@@ -607,6 +663,56 @@
       if (code === 'ArrowUp' || key === 'arrowup') keys['arrowup'] = false;
       if (code === 'ArrowLeft' || key === 'arrowleft') keys['arrowleft'] = false;
       if (code === 'ArrowRight' || key === 'arrowright') keys['arrowright'] = false;
+    });
+
+    // ===== ОПРЕДЕЛЕНИЕ СМАРТФОНА И ПОКАЗ КНОПОК =====
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+             || (('ontouchstart' in window) && window.innerWidth <= 900);
+    }
+
+    const mobileControls = document.getElementById('mobileControls');
+    if (isMobileDevice()) {
+      mobileControls.classList.add('visible');
+    }
+
+    // ===== ОБРАБОТЧИКИ МОБИЛЬНЫХ КНОПОК =====
+    function setupMobileButton(btnId, keyName) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+
+      const press = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = true;
+        btn.classList.add('active');
+      };
+
+      const release = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = false;
+        btn.classList.remove('active');
+      };
+
+      // touch
+      btn.addEventListener('touchstart', press, { passive: false });
+      btn.addEventListener('touchend', release, { passive: false });
+      btn.addEventListener('touchcancel', release, { passive: false });
+      // мышь (для тестов на ПК)
+      btn.addEventListener('mousedown', press);
+      btn.addEventListener('mouseup', release);
+      btn.addEventListener('mouseleave', release);
+    }
+
+    setupMobileButton('btnLeft', 'arrowleft');
+    setupMobileButton('btnUp', 'arrowup');
+    setupMobileButton('btnRight', 'arrowright');
+
+    // Страховка: если палец ушёл с кнопки — сбросить все
+    document.addEventListener('touchend', () => {
+      keys['arrowleft'] = keys['arrowright'] = keys['arrowup'] = false;
+      document.querySelectorAll('.mobile-btn').forEach(b => b.classList.remove('active'));
     });
 
     const gravity = 0.45;       
