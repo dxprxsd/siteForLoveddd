@@ -68,36 +68,41 @@
       scroll-margin-top: 20px;
     }
 
-    .card::before {
-      content: '';
-      position: absolute;
-      inset: -3px;
-      border-radius: 35px;
-      padding: 3px;
-      background: linear-gradient(
-        90deg,
-        #b3e58b 0%, #7fd4ff 20%, #fff2a8 40%,
-        #ffffff 55%, #b3e58b 70%, #7fd4ff 85%, #fff2a8 100%
-      );
-      background-size: 300% 100%;
-      background-repeat: repeat-x;
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      mask-composite: exclude;
-      animation: borderFlow 4s linear infinite;
-      z-index: -1;
-      pointer-events: none;
-      filter: drop-shadow(0 0 10px rgba(179, 229, 139, 0.5));
-    }
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 35px;
+  padding: 3px;
+  background: linear-gradient(
+    90deg,
+    #b3e58b 0%, #7fd4ff 20%, #fff2a8 40%,
+    #ffffff 55%, #b3e58b 70%, #7fd4ff 85%, #fff2a8 100%
+  );
+  background-size: 200% 100%; /* Было 300%, это сильно нагружало GPU */
+  background-repeat: repeat-x;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: borderFlow 6s linear infinite; /* Замедлили с 4s до 6s */
+  z-index: -1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgba(179, 229, 139, 0.5));
+  /* Аппаратное ускорение для рамки */
+  transform: translateZ(0);
+  will-change: background-position;
+}
+
+/* Меняем саму анимацию на более плавную */
+@keyframes borderFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
 
     @keyframes borderFlow {
-      0%   { background-position: 0% 50%; }
-      100% { background-position: 300% 50%; }
+      0% { background-position: 0% 50%; } 
+      100% { background-position: 200% 50%; }
     }
 
     @keyframes fadeUp {
