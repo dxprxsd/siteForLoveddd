@@ -135,26 +135,50 @@
       transition: width 0.1s linear;
     }
 
-    /* ===== ОСТАЛЬНОЙ СТИЛЬ ===== */
-    .back-btn {
+    /* ===== ВЕРХНИЕ КНОПКИ ===== */
+    .top-controls {
       position: absolute;
       top: 20px;
       left: 20px;
-      color: #ffaa00;
-      text-decoration: none;
-      font-size: 0.8rem;
-      padding: 10px 20px;
-      background: #444;
-      border: 4px solid #000;
-      box-shadow: inset -4px -4px 0px #222, inset 4px 4px 0px #666;
-      text-shadow: 2px 2px 0px #000;
-      transition: all 0.1s;
+      display: flex;
+      gap: 15px;
       z-index: 100;
     }
 
-    .back-btn:active {
-      box-shadow: inset 4px 4px 0px #222, inset -4px -4px 0px #666;
+    .mc-btn {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.8rem;
+      padding: 10px 20px;
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      transition: all 0.1s;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mc-btn:active {
+      box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
       transform: translate(2px, 2px);
+    }
+
+    .sound-btn {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      font-size: 1.2rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 0 rgba(255, 170, 0, 0.7); }
+      70% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 10px rgba(255, 170, 0, 0); }
+      100% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 0 rgba(255, 170, 0, 0); }
     }
 
     .game-section {
@@ -345,7 +369,9 @@
     }
 
     @media (max-width: 600px) {
-      .back-btn { top: 10px; left: 10px; padding: 8px 12px; font-size: 0.7rem; }
+      .top-controls { top: 10px; left: 10px; gap: 10px; }
+      .mc-btn { padding: 8px 12px; font-size: 0.7rem; }
+      .sound-btn { width: 36px; height: 36px; font-size: 1rem; }
       .game-title { font-size: 1.1rem; margin-top: 40px; }
       .game-overlay h3 { font-size: 1.2rem; }
       .game-overlay p { font-size: 0.8rem; }
@@ -375,7 +401,11 @@
     </div>
   </div>
 
-  <a href="index.html" class="back-btn">← Назад к открытке</a>
+  <!-- Верхние кнопки управления (как в ресторане) -->
+  <div class="top-controls">
+    <a href="index.html" class="mc-btn">← Назад</a>
+    <button id="musicToggle" class="mc-btn sound-btn" title="Включить/выключить музыку">🔇</button>
+  </div>
 
   <section class="game-section">
     <h2 class="game-title" id="levelTitle">Уровень 1</h2>
@@ -429,6 +459,9 @@
     const loadingBarFill = document.getElementById('loadingBarFill');
     const ariamathMusic = document.getElementById('ariamathMusic');
     const clickSound = document.getElementById('clickSound');
+    const musicToggle = document.getElementById('musicToggle');
+
+    let isMusicPlaying = false;
 
     // Картинки
     const imgMashulya = new Image();
@@ -476,15 +509,18 @@
         });
       });
 
+      // Ждём готовности аудио
       const musicReady = new Promise(resolve => {
         if (ariamathMusic.readyState >= 3) {
           resolve();
         } else {
           ariamathMusic.addEventListener('canplaythrough', resolve, { once: true });
+          // Страховка на случай, если браузер не может загрузить
           setTimeout(resolve, 5000); 
         }
       });
 
+      // Ждём, пока загрузятся все картинки и музыка
       Promise.all([...allImages, musicReady]).then(() => {
         clearInterval(progressInterval);
         loadingBarFill.style.width = '100%';
@@ -492,16 +528,42 @@
         setTimeout(() => {
           loadingScreen.classList.remove('active');
           
+          // Запускаем музыку
           ariamathMusic.volume = 0.4;
           ariamathMusic.play()
             .then(() => {
               console.log("Музыка ariamath.mp3 заиграла!");
+              isMusicPlaying = true;
+              musicToggle.innerText = '🔊';
+              musicToggle.style.animation = 'none';
             })
             .catch(e => {
-              alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+              console.error("Ошибка музыки:", e);
+              // Если браузер блокирует автоплей — пользователь сможет нажать кнопку вручную
             });
         }, 400); 
       });
+    });
+
+    // ===== КНОПКА ВКЛ/ВЫКЛ МУЗЫКИ =====
+    musicToggle.addEventListener('click', () => {
+      if (isMusicPlaying) {
+        ariamathMusic.pause();
+        musicToggle.innerText = '🔇';
+        isMusicPlaying = false;
+        musicToggle.style.animation = 'none';
+      } else {
+        ariamathMusic.volume = 0.4;
+        ariamathMusic.play()
+          .then(() => {
+            musicToggle.innerText = '🔊';
+            isMusicPlaying = true;
+            musicToggle.style.animation = 'none';
+          })
+          .catch(e => {
+            alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+          });
+      }
     });
 
     const playerWidth = 50;
