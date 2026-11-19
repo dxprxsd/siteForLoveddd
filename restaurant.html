@@ -7,11 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Press Start 2P', monospace;
@@ -31,7 +27,68 @@
       image-rendering: pixelated;
     }
 
-    /* Контейнер для верхних кнопок */
+    /* ===== ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ" ===== */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      transition: opacity 0.6s ease;
+    }
+
+    .welcome-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .welcome-box {
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      padding: 40px 50px;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .welcome-box h1 {
+      font-size: 1.8rem;
+      color: #ffaa00;
+      text-shadow: 3px 3px 0px #3f3f3f, 4px 4px 0px #000;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+
+    .welcome-btn {
+      background: #5b8731;
+      color: #fff;
+      text-decoration: none;
+      padding: 15px 40px;
+      font-size: 1rem;
+      font-family: 'Press Start 2P', monospace;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      text-shadow: 2px 2px 0px #2b3f17;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .welcome-btn:active {
+      box-shadow: inset 4px 4px 0px #3d5c20, inset -4px -4px 0px #7ebc42;
+      transform: translate(2px, 2px);
+    }
+
+    /* ===== ОСТАЛЬНОЙ СТИЛЬ ===== */
     .top-controls {
       position: absolute;
       top: 20px;
@@ -41,7 +98,6 @@
       z-index: 100;
     }
 
-    /* Общий стиль для кнопок */
     .mc-btn {
       color: #fff;
       text-decoration: none;
@@ -64,7 +120,6 @@
       transform: translate(2px, 2px);
     }
 
-    /* Кнопка звука (с анимацией пульсации, чтобы привлечь внимание) */
     .sound-btn {
       width: 44px;
       height: 44px;
@@ -94,10 +149,7 @@
       box-shadow: inset 4px 4px 0px #555, inset -4px -4px 0px #222;
     }
 
-    .hero-text {
-      flex: 1;
-      max-width: 500px;
-    }
+    .hero-text { flex: 1; max-width: 500px; }
 
     .hero-text h1 {
       font-size: 2.5rem;
@@ -232,9 +284,7 @@
       transition: color 0.3s;
     }
 
-    .learn-more:hover {
-      color: #fff;
-    }
+    .learn-more:hover { color: #fff; }
 
     .cart-section {
       margin-top: 40px;
@@ -270,10 +320,7 @@
       transition: opacity 1s ease-in-out;
     }
 
-    .overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
 
     .overlay-text {
       font-size: 2rem;
@@ -282,11 +329,6 @@
       margin-top: 40px;
       text-align: center;
       animation: bounce 0.5s infinite alternate;
-    }
-
-    @keyframes bounce {
-      from { transform: translateY(0); }
-      to { transform: translateY(-10px); }
     }
 
     .overlay-img {
@@ -316,14 +358,9 @@
     }
 
     @media (max-width: 900px) {
-      .hero-section {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
-      }
-      .hero-text h1 {
-        font-size: 1.8rem;
-      }
+      .hero-section { flex-direction: column; text-align: center; padding: 20px; }
+      .hero-text h1 { font-size: 1.8rem; }
+      .welcome-box h1 { font-size: 1.2rem; }
     }
 
     @media (max-width: 600px) {
@@ -335,10 +372,21 @@
       .order-btn { font-size: 0.8rem; padding: 10px 20px; }
       .cart-section { padding: 15px; }
       .overlay-btn { font-size: 0.8rem; padding: 10px 20px; }
+      .welcome-box { padding: 25px 20px; }
+      .welcome-box h1 { font-size: 1rem; }
+      .welcome-btn { font-size: 0.8rem; padding: 12px 25px; }
     }
   </style>
 </head>
 <body>
+
+  <!-- ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ" -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-box">
+      <h1>Добро пожаловать!!</h1>
+      <button class="welcome-btn" id="enterBtn">Войти</button>
+    </div>
+  </div>
 
   <!-- Верхние кнопки управления -->
   <div class="top-controls">
@@ -415,18 +463,38 @@
 
   <!-- Звуки -->
   <audio id="levelUpSound" src="xp-level-up.mp3" preload="auto"></audio>
-  <!-- ВАЖНО: Переименуйте файл в music.mp3 для надежности -->
-  <audio id="bgMusic" src="music.mp3" loop></audio>
+  <audio id="bgMusic" loop>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
 
   <script>
-    // ===== ЛОГИКА ФОНОВОЙ МУЗЫКИ =====
+    // ===== ВХОД И ЗАПУСК МУЗЫКИ (с показом точной ошибки) =====
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    const enterBtn = document.getElementById('enterBtn');
     const bgMusic = document.getElementById('bgMusic');
     const musicToggle = document.getElementById('musicToggle');
     let isMusicPlaying = false;
 
-    // Для отладки: выводим полный путь, откуда браузер пытается загрузить музыку
-    console.log("Путь к музыке:", bgMusic.src);
+    enterBtn.addEventListener('click', () => {
+      welcomeOverlay.classList.add('hidden');
 
+      // Воспроизводим music.mp3 и показываем точную ошибку, если не заиграет
+      bgMusic.volume = 0.3;
+      bgMusic.play()
+        .then(() => {
+          console.log("Музыка заиграла!");
+          isMusicPlaying = true;
+          musicToggle.innerText = '🔊';
+          musicToggle.style.animation = 'none';
+        })
+        .catch(e => {
+          // Всплывающее окно с точной причиной
+          alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+          console.error("Детали ошибки:", e);
+        });
+    });
+
+    // ===== КНОПКА ВКЛ/ВЫКЛ МУЗЫКИ =====
     musicToggle.addEventListener('click', () => {
       if (isMusicPlaying) {
         bgMusic.pause();
@@ -435,26 +503,20 @@
         musicToggle.style.animation = 'none';
       } else {
         bgMusic.volume = 0.3;
-        
-        // Используем промис для обработки ошибок
-        const playPromise = bgMusic.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            // Успешно заиграло
+        bgMusic.play()
+          .then(() => {
             musicToggle.innerText = '🔊';
             isMusicPlaying = true;
             musicToggle.style.animation = 'none';
-          }).catch(error => {
-            // Ошибка
-            console.error("Детали ошибки:", error);
-            alert("Не удалось воспроизвести музыку.\n\n1. Убедитесь, что файл называется music.mp3 и лежит в папке с сайтом.\n2. Откройте консоль (F12) -> Console для деталей.");
+          })
+          .catch(e => {
+            alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+            console.error("Детали ошибки:", e);
           });
-        }
       }
     });
 
-    // ===== ЛОГИКА КОРЗИНЫ =====
+    // ===== КОРЗИНА =====
     function toggleItem(card) {
       card.classList.toggle('selected');
       updateCartCount();
@@ -467,22 +529,23 @@
 
     function submitOrder() {
       const selected = document.querySelectorAll('.dish-card.selected');
-      
       if (selected.length === 0) {
         alert("Пожалуйста, выберите хотя бы одно блюдо!");
         return;
       }
 
+      // Звук level up
       const audio = document.getElementById('levelUpSound');
       audio.volume = 0.5;
       audio.play().catch(e => console.log("Ошибка воспроизведения звука:", e));
 
+      // Анимация повара
       const bakerStatic = document.getElementById('bakerStatic');
       const bakerGif = document.getElementById('bakerGif');
-      
       bakerStatic.style.opacity = '0';
       bakerGif.style.opacity = '1';
 
+      // Показываем финальную плашку
       const overlay = document.getElementById('finalOverlay');
       overlay.classList.add('show');
     }
