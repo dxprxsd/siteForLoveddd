@@ -111,8 +111,47 @@
 
     .game-overlay p {
       color: #e8e2e2;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       font-size: 1.2rem;
+    }
+
+    .dancing-characters {
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 20px;
+      height: 120px;
+    }
+
+    .dancing-characters.show {
+      display: flex;
+    }
+
+    .dancing-characters img {
+      height: 100px;
+      width: auto;
+      object-fit: contain;
+      animation: dance 1s ease-in-out infinite alternate;
+      filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+    }
+
+    .dancing-characters img:nth-child(2) {
+      animation-delay: 0.2s;
+      animation-direction: alternate-reverse;
+    }
+
+    @keyframes dance {
+      0% { transform: translateY(0) rotate(-5deg); }
+      100% { transform: translateY(-15px) rotate(5deg); }
+    }
+
+    .overlay-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
     }
 
     .game-btn {
@@ -125,17 +164,32 @@
       font-weight: bold;
       cursor: pointer;
       transition: transform 0.2s;
-      margin: 5px;
+      width: 100%;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
     }
 
     .game-btn:hover {
       transform: scale(1.05);
     }
 
+    .btn-home {
+      background: transparent;
+      border: 2px solid #b3e58b;
+      color: #b3e58b;
+    }
+    
+    .btn-home:hover {
+      background: #b3e58b;
+      color: #383838;
+    }
+
     @media (max-width: 600px) {
       .back-btn { top: 10px; left: 10px; padding: 8px 15px; font-size: 1rem; }
       .game-title { font-size: 1.4rem; margin-top: 40px; }
       .game-overlay h3 { font-size: 1.8rem; }
+      .dancing-characters img { height: 80px; }
     }
   </style>
 </head>
@@ -152,8 +206,17 @@
       <div id="gameOverlay" class="game-overlay">
         <h3 id="overlayTitle">Уровень пройден!</h3>
         <p id="overlayText">Ты добрался до заветной двери.</p>
-        <button id="mainBtn" class="game-btn">Следующий уровень</button>
-        <button onclick="restartFullGame()" class="game-btn" style="background: #a9a2a2;">Начать сначала</button>
+        
+        <!-- Танцующие персонажи (появляются на 2-м уровне) -->
+        <div class="dancing-characters" id="dancingChars">
+          <img src="vanya.png" alt="Ваня танцует">
+          <img src="mashulya.png" alt="Машуля танцует">
+        </div>
+
+        <div class="overlay-buttons">
+          <button id="mainBtn" class="game-btn">Следующий уровень</button>
+          <a href="index.html" class="game-btn btn-home">На главную</a>
+        </div>
       </div>
     </div>
   </section>
@@ -166,6 +229,7 @@
     const overlayTitle = document.getElementById('overlayTitle');
     const overlayText = document.getElementById('overlayText');
     const mainBtn = document.getElementById('mainBtn');
+    const dancingChars = document.getElementById('dancingChars');
 
     // Картинки персонажей и дверей
     const imgMashulya = new Image();
@@ -183,17 +247,14 @@
       a: false, d: false, w: false
     };
 
-    // Обработчик нажатия клавиш (учитывает и e.code, и e.key)
     window.addEventListener('keydown', (e) => {
-      const code = e.code; // Физическая клавиша (KeyW, KeyA, KeyD)
-      const key = e.key.toLowerCase(); // Символ (w, a, d, ц, ф, в)
+      const code = e.code;
+      const key = e.key.toLowerCase();
 
-      // Проверяем WASD (независимо от раскладки)
       if (code === 'KeyW' || key === 'w' || key === 'ц') keys['w'] = true;
       if (code === 'KeyA' || key === 'a' || key === 'ф') keys['a'] = true;
       if (code === 'KeyD' || key === 'd' || key === 'в') keys['d'] = true;
 
-      // Проверяем стрелки
       if (code === 'ArrowUp' || key === 'arrowup') {
         keys['arrowup'] = true;
         e.preventDefault();
@@ -208,7 +269,6 @@
       }
     });
 
-    // Обработчик отпускания клавиш
     window.addEventListener('keyup', (e) => {
       const code = e.code;
       const key = e.key.toLowerCase();
@@ -230,7 +290,6 @@
     let gameOver = false;
     let score = 0;
 
-    // Данные уровней
     const levels = {
       1: {
         title: 'Уровень 1',
@@ -245,7 +304,6 @@
           { x: 290, y: 230, w: 600, h: 20 },     
           { x: 10, y: 100, w: 600, h: 20 }       
         ],
-        // Дверь сделана квадратной (60x60)
         door: { x: 150, y: 40, w: 60, h: 60 },
         hearts: [
           { x: 200, y: 520, w: 25, h: 25, collected: false },
@@ -268,7 +326,6 @@
           { x: 10, y: 310, w: 500, h: 20 },      
           { x: 450, y: 180, w: 440, h: 20 }      
         ],
-        // Дверь сделана квадратной (60x60)
         door: { x: 780, y: 120, w: 60, h: 60 },
         hearts: [
           { x: 100, y: 520, w: 25, h: 25, collected: false },
@@ -283,7 +340,6 @@
 
     let player = { x: 0, y: 0, vx: 0, vy: 0, w: playerWidth, h: playerHeight, isGround: false };
 
-    // Функция для рисования красивого векторного сердечка
     function drawHeart(x, y, w, h) {
       ctx.save();
       ctx.translate(x + w / 2, y + h / 2);
@@ -312,6 +368,7 @@
       
       levelTitle.innerText = lvl.title;
       overlay.classList.remove('show');
+      dancingChars.classList.remove('show');
       gameOver = false;
       score = 0;
 
@@ -323,9 +380,8 @@
       lvl.hearts.forEach(h => h.collected = false);
     }
 
-    window.restartFullGame = function() {
-      loadLevel(1);
-    };
+    // Убрали restartFullGame, так как кнопка удалена
+    // mainBtn теперь обрабатывает и рестарт, и переход
 
     mainBtn.addEventListener('click', () => {
       if (currentLevel === 1) {
@@ -346,7 +402,6 @@
       if (gameOver) return;
       const lvl = levels[currentLevel];
 
-      // Используем ключи в нижнем регистре
       if (keys['arrowleft'] || keys['a']) player.vx = -moveSpeed;
       else if (keys['arrowright'] || keys['d']) player.vx = moveSpeed;
       else player.vx = 0;
@@ -358,7 +413,6 @@
 
       player.vy += gravity;
 
-      // Коллизии по X
       player.x += player.vx;
       for (let plat of lvl.platforms) {
         if (isColliding(player, plat)) {
@@ -367,7 +421,6 @@
         }
       }
 
-      // Коллизии по Y
       player.y += player.vy;
       player.isGround = false;
       for (let plat of lvl.platforms) {
@@ -383,7 +436,6 @@
         }
       }
 
-      // Сбор сердечек
       lvl.hearts.forEach(h => {
         if (!h.collected && isColliding(player, h)) {
           h.collected = true;
@@ -406,9 +458,9 @@
           mainBtn.innerText = 'Следующий уровень';
         } else {
           overlayTitle.innerText = 'Победа!';
-          overlayText.innerText = `Все уровни пройдены! Сердечек собрано: ${score} из ${lvl.hearts.length}.`;
-          overlayText.innerText = `Вы получаете купон на 1 бесплатный массаж!`;пор
+          overlayText.innerText = `Все уровни пройдены! Вы получаете купон на 1 бесплатный массаж!`;
           mainBtn.innerText = 'Играть заново';
+          dancingChars.classList.add('show');
         }
       }
     }
@@ -417,11 +469,9 @@
       const lvl = levels[currentLevel];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Фон
       ctx.fillStyle = '#1e1e1e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Платформы
       ctx.fillStyle = '#4a5a3a';
       lvl.platforms.forEach(plat => {
         if (plat.y >= 0 && plat.x >= 0) { 
@@ -432,7 +482,6 @@
         }
       });
 
-      // Дверь
       if (lvl.doorImg.complete && lvl.doorImg.naturalHeight !== 0) {
         ctx.drawImage(lvl.doorImg, lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
       } else {
@@ -440,14 +489,12 @@
         ctx.fillRect(lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
       }
 
-      // Сердечки
       lvl.hearts.forEach(h => {
         if (!h.collected) {
           drawHeart(h.x, h.y, h.w, h.h);
         }
       });
 
-      // Персонаж
       if (lvl.playerImg.complete && lvl.playerImg.naturalHeight !== 0) {
         ctx.drawImage(lvl.playerImg, player.x, player.y, player.w, player.h);
       } else {
@@ -463,7 +510,6 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Инициализация и запуск
     loadLevel(1);
     gameLoop();
   </script>
