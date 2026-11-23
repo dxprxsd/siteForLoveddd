@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Подземелье · Наш первый год</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Press Start 2P', monospace;
+      background-color: #1a1a1a;
+      background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('bgkamen.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #e8e2e2;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* было center — из-за этого всё «уезжало» */
+      padding: 20px 10px 120px;    /* нижний отступ под мобильные кнопки */
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* ===== ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ В ИГРУ" ===== */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+      transition: opacity 0.6s ease;
+    }
+
+    .welcome-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .welcome-box {
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      padding: 40px 50px;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .welcome-box h1 {
+      font-size: 1.5rem;
+      color: #ffaa00;
+      text-shadow: 3px 3px 0px #3f3f3f, 4px 4px 0px #000;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-8px); }
+    }
+
+    .welcome-btn {
+      background: #5b8731;
+      color: #fff;
+      text-decoration: none;
+      padding: 15px 40px;
+      font-size: 1rem;
+      font-family: 'Press Start 2P', monospace;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      text-shadow: 2px 2px 0px #2b3f17;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .welcome-btn:active {
+      box-shadow: inset 4px 4px 0px #3d5c20, inset -4px -4px 0px #7ebc42;
+      transform: translate(2px, 2px);
+    }
+
+    /* ===== ЭКРАН ЗАГРУЗКИ ===== */
+    .loading-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 4000;
+    }
+
+    .loading-screen.active {
+      display: flex;
+    }
+
+    .loading-text {
+      font-size: 1.2rem;
+      color: #fff;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: 300px;
+      height: 30px;
+      border: 4px solid #fff;
+      padding: 4px;
+      background: #3f3f3f;
+      box-shadow: inset 4px 4px 0px #222, inset -4px -4px 0px #555;
+      position: relative;
+    }
+
+    .loading-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #5b8731;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      transition: width 0.1s linear;
+    }
+
+    /* ===== ВЕРХНИЕ КНОПКИ ===== */
+    .top-controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .mc-btn {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.8rem;
+      padding: 10px 20px;
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      transition: all 0.1s;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mc-btn:active {
+      box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
+      transform: translate(2px, 2px);
+    }
+
+    .sound-btn {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      font-size: 1.2rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 0 rgba(255, 170, 0, 0.7); }
+      70% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 10px rgba(255, 170, 0, 0); }
+      100% { box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8, 0 0 0 0 rgba(255, 170, 0, 0); }
+    }
+
+    .game-section {
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .game-title {
+      color: #ffaa00;
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      text-align: center;
+      text-shadow: 3px 3px 0px #3f3f3f, 4px 4px 0px #000;
+      letter-spacing: 2px;
+    }
+
+    .game-subtitle {
+      color: #a9a2a2;
+      font-size: 0.8rem;
+      margin-bottom: 30px;
+      text-align: center;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 4px #000,
+        0 0 0 8px #5a3a1a,
+        0 20px 60px rgba(0, 0, 0, 0.9),
+        inset 0 0 50px rgba(0,0,0,0.8);
+      background: #000;
+      border: 2px solid #8b5a2b;
+    }
+
+    .game-wrapper::before,
+    .game-wrapper::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #ffaa00;
+      z-index: 5;
+      box-shadow: 0 0 10px #ffaa00;
+    }
+    .game-wrapper::before { top: 0; left: 0; border-bottom-right-radius: 10px; }
+    .game-wrapper::after { bottom: 0; right: 0; border-top-left-radius: 10px; }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      touch-action: none; /* чтобы свайпы не скроллили страницу во время игры */
+    }
+
+    .game-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 10, 10, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .game-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .game-overlay h3 {
+      color: #ffaa00;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    .game-overlay p {
+      color: #e8e2e2;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      text-shadow: 1px 1px 0px #000;
+      line-height: 1.8;
+    }
+
+    .dancing-characters {
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 30px;
+      margin-bottom: 20px;
+      height: 140px;
+    }
+
+    .dancing-characters.show {
+      display: flex;
+    }
+
+    .dancing-character-item {
+      position: relative;
+      height: 100px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      animation: dance 1s ease-in-out infinite alternate;
+    }
+
+    .dancing-character-item:nth-child(2) {
+      animation-delay: 0.2s;
+      animation-direction: alternate-reverse;
+    }
+
+    .dancing-character-item img.character {
+      height: 100px;
+      width: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 15px rgba(255, 170, 0, 0.4));
+    }
+
+    .dancing-character-item img.torch {
+      position: absolute;
+      height: 30px;
+      width: auto;
+      bottom: 20px;
+      right: -15px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 10px rgba(255, 170, 0, 0.8));
+    }
+
+    @keyframes dance {
+      0% { transform: translateY(0) rotate(-5deg); }
+      100% { transform: translateY(-15px) rotate(5deg); }
+    }
+
+    .overlay-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .game-btn {
+      background: #5b8731;
+      color: #fff;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #3d5c20, inset 4px 4px 0px #7ebc42;
+      padding: 15px 30px;
+      font-size: 0.9rem;
+      font-family: 'Press Start 2P', monospace;
+      text-shadow: 2px 2px 0px #2b3f17;
+      cursor: pointer;
+      transition: all 0.1s;
+      width: 100%;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .game-btn:active {
+      box-shadow: inset 4px 4px 0px #3d5c20, inset -4px -4px 0px #7ebc42;
+      transform: translate(2px, 2px);
+    }
+
+    .btn-home {
+      background: #7c7c7c;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      text-shadow: 2px 2px 0px #3f3f3f;
+    }
+
+    .btn-home:active {
+      box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
+    }
+
+    /* ===== МОБИЛЬНЫЕ КНОПКИ УПРАВЛЕНИЯ ===== */
+    .mobile-controls {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      gap: 20px;
+      z-index: 500;
+      padding: 10px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .mobile-controls.visible {
+      display: flex;
+    }
+
+    .mobile-btn {
+      width: 70px;
+      height: 70px;
+      background: #7c7c7c;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px #4a4a4a, inset 4px 4px 0px #b8b8b8;
+      color: #fff;
+      font-size: 2rem;
+      font-family: 'Press Start 2P', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      transition: all 0.05s;
+    }
+
+    .mobile-btn.active,
+    .mobile-btn:active {
+      box-shadow: inset 4px 4px 0px #4a4a4a, inset -4px -4px 0px #b8b8b8;
+      transform: translate(2px, 2px);
+    }
+
+    @media (max-width: 900px) {
+      .game-section { padding-bottom: 100px; }
+      .game-wrapper { max-width: 100%; }
+    }
+
+    @media (max-width: 600px) {
+      .top-controls { top: 10px; left: 10px; gap: 10px; }
+      .mc-btn { padding: 8px 12px; font-size: 0.7rem; }
+      .sound-btn { width: 36px; height: 36px; font-size: 1rem; }
+      .game-title { font-size: 1.1rem; margin-top: 40px; }
+      .game-overlay h3 { font-size: 1.2rem; }
+      .game-overlay p { font-size: 0.8rem; }
+      .dancing-character-item, .dancing-character-item img.character { height: 70px; }
+      .dancing-character-item img.torch { height: 22px; bottom: 15px; right: -10px; }
+      .game-btn { padding: 12px 20px; font-size: 0.8rem; }
+      .welcome-box h1 { font-size: 1.1rem; }
+      .welcome-btn { font-size: 0.8rem; padding: 12px 25px; }
+      .mobile-btn { width: 60px; height: 60px; font-size: 1.5rem; }
+      .mobile-controls { gap: 15px; bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ПЛАШКА "ДОБРО ПОЖАЛОВАТЬ В ИГРУ" -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-box">
+      <h1>Добро пожаловать в игру!</h1>
+      <button class="welcome-btn" id="enterBtn">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН ЗАГРУЗКИ -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-text">Загрузка...</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+  </div>
+
+  <!-- Верхние кнопки управления -->
+  <div class="top-controls">
+    <a href="index.html" class="mc-btn">← Назад</a>
+    <button id="musicToggle" class="mc-btn sound-btn" title="Включить/выключить музыку">🔇</button>
+  </div>
+
+  <section class="game-section">
+    <h2 class="game-title" id="levelTitle">Уровень 1</h2>
+    <p class="game-subtitle">Собери все сердечки и добеги до двери!</p>
+    
+    <div class="game-wrapper">
+      <canvas id="gameCanvas" width="900" height="600"></canvas>
+      
+      <div id="gameOverlay" class="game-overlay">
+        <h3 id="overlayTitle">Уровень пройден!</h3>
+        <p id="overlayText">Ты добрался до заветной двери.</p>
+        
+        <div class="dancing-characters" id="dancingChars">
+          <div class="dancing-character-item">
+            <img src="vanya.png" alt="Ваня" class="character">
+            <img src="fackel.png" alt="Факел" class="torch">
+          </div>
+          <div class="dancing-character-item">
+            <img src="mashulya.png" alt="Машуля" class="character">
+            <img src="fackel.png" alt="Факел" class="torch">
+          </div>
+        </div>
+
+        <div class="overlay-buttons">
+          <button id="mainBtn" class="game-btn">Следующий уровень</button>
+          <a href="index.html" class="game-btn btn-home">На главную</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- МОБИЛЬНЫЕ КНОПКИ УПРАВЛЕНИЯ -->
+  <div class="mobile-controls" id="mobileControls">
+    <div class="mobile-btn" id="btnLeft" data-key="left">◀</div>
+    <div class="mobile-btn" id="btnUp" data-key="up">▲</div>
+    <div class="mobile-btn" id="btnRight" data-key="right">▶</div>
+  </div>
+
+  <!-- Звуки -->
+  <audio id="ariamathMusic" loop preload="auto">
+    <source src="ariamath.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickSound" src="minecraft_click.mp3" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('gameOverlay');
+    const levelTitle = document.getElementById('levelTitle');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayText = document.getElementById('overlayText');
+    const mainBtn = document.getElementById('mainBtn');
+    const dancingChars = document.getElementById('dancingChars');
+
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+    const enterBtn = document.getElementById('enterBtn');
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingBarFill = document.getElementById('loadingBarFill');
+    const ariamathMusic = document.getElementById('ariamathMusic');
+    const clickSound = document.getElementById('clickSound');
+    const musicToggle = document.getElementById('musicToggle');
+
+    let isMusicPlaying = false;
+
+    // Картинки
+    const imgMashulya = new Image();
+    imgMashulya.src = 'mashulya.png';
+    const imgVanya = new Image();
+    imgVanya.src = 'vanya.png';
+    const imgTorch = new Image();
+    imgTorch.src = 'fackel.png';
+    const imgHeart = new Image();
+    imgHeart.src = 'heart.png';
+    const imgBgGame = new Image();
+    imgBgGame.src = 'bgpodzemele.jpg';
+
+    // Универсальный звук клика
+    function playClickSound() {
+      clickSound.volume = 0.4;
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => console.log("Ошибка клика:", e));
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, a')) {
+        playClickSound();
+      }
+    });
+
+    enterBtn.addEventListener('click', () => {
+      welcomeOverlay.classList.add('hidden');
+      loadingScreen.classList.add('active');
+      loadingBarFill.style.width = '0%';
+
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        if (progress < 90) {
+          progress += Math.random() * 5;
+          loadingBarFill.style.width = progress + '%';
+        }
+      }, 100);
+
+      const allImages = Array.from(document.querySelectorAll('img')).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.addEventListener('load', resolve);
+          img.addEventListener('error', resolve);
+        });
+      });
+
+      const musicReady = new Promise(resolve => {
+        if (ariamathMusic.readyState >= 3) {
+          resolve();
+        } else {
+          ariamathMusic.addEventListener('canplaythrough', resolve, { once: true });
+          setTimeout(resolve, 5000); 
+        }
+      });
+
+      Promise.all([...allImages, musicReady]).then(() => {
+        clearInterval(progressInterval);
+        loadingBarFill.style.width = '100%';
+
+        setTimeout(() => {
+          loadingScreen.classList.remove('active');
+          
+          ariamathMusic.volume = 0.4;
+          ariamathMusic.play()
+            .then(() => {
+              console.log("Музыка ariamath.mp3 заиграла!");
+              isMusicPlaying = true;
+              musicToggle.innerText = '🔊';
+              musicToggle.style.animation = 'none';
+            })
+            .catch(e => {
+              console.error("Ошибка музыки:", e);
+            });
+        }, 400); 
+      });
+    });
+
+    // ===== КНОПКА ВКЛ/ВЫКЛ МУЗЫКИ =====
+    musicToggle.addEventListener('click', () => {
+      if (isMusicPlaying) {
+        ariamathMusic.pause();
+        musicToggle.innerText = '🔇';
+        isMusicPlaying = false;
+        musicToggle.style.animation = 'none';
+      } else {
+        ariamathMusic.volume = 0.4;
+        ariamathMusic.play()
+          .then(() => {
+            musicToggle.innerText = '🔊';
+            isMusicPlaying = true;
+            musicToggle.style.animation = 'none';
+          })
+          .catch(e => {
+            alert("Ошибка музыки: " + e.name + "\n\n" + e.message);
+          });
+      }
+    });
+
+    const playerWidth = 50;
+    const playerHeight = 50;
+
+    const keys = {
+      arrowleft: false, arrowright: false, arrowup: false,
+      a: false, d: false, w: false
+    };
+
+    window.addEventListener('keydown', (e) => {
+      const code = e.code;
+      const key = e.key.toLowerCase();
+
+      if (code === 'KeyW' || key === 'w' || key === 'ц') keys['w'] = true;
+      if (code === 'KeyA' || key === 'a' || key === 'ф') keys['a'] = true;
+      if (code === 'KeyD' || key === 'd' || key === 'в') keys['d'] = true;
+
+      if (code === 'ArrowUp' || key === 'arrowup') {
+        keys['arrowup'] = true;
+        e.preventDefault();
+      }
+      if (code === 'ArrowLeft' || key === 'arrowleft') {
+        keys['arrowleft'] = true;
+        e.preventDefault();
+      }
+      if (code === 'ArrowRight' || key === 'arrowright') {
+        keys['arrowright'] = true;
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const code = e.code;
+      const key = e.key.toLowerCase();
+
+      if (code === 'KeyW' || key === 'w' || key === 'ц') keys['w'] = false;
+      if (code === 'KeyA' || key === 'a' || key === 'ф') keys['a'] = false;
+      if (code === 'KeyD' || key === 'd' || key === 'в') keys['d'] = false;
+
+      if (code === 'ArrowUp' || key === 'arrowup') keys['arrowup'] = false;
+      if (code === 'ArrowLeft' || key === 'arrowleft') keys['arrowleft'] = false;
+      if (code === 'ArrowRight' || key === 'arrowright') keys['arrowright'] = false;
+    });
+
+    // ===== ОПРЕДЕЛЕНИЕ СМАРТФОНА И ПОКАЗ КНОПОК =====
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+             || (('ontouchstart' in window) && window.innerWidth <= 900);
+    }
+
+    const mobileControls = document.getElementById('mobileControls');
+    if (isMobileDevice()) {
+      mobileControls.classList.add('visible');
+    }
+
+    // ===== ОБРАБОТЧИКИ МОБИЛЬНЫХ КНОПОК =====
+    function setupMobileButton(btnId, keyName) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+
+      const press = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = true;
+        btn.classList.add('active');
+      };
+
+      const release = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        keys[keyName] = false;
+        btn.classList.remove('active');
+      };
+
+      // touch
+      btn.addEventListener('touchstart', press, { passive: false });
+      btn.addEventListener('touchend', release, { passive: false });
+      btn.addEventListener('touchcancel', release, { passive: false });
+      // мышь (для тестов на ПК)
+      btn.addEventListener('mousedown', press);
+      btn.addEventListener('mouseup', release);
+      btn.addEventListener('mouseleave', release);
+    }
+
+    setupMobileButton('btnLeft', 'arrowleft');
+    setupMobileButton('btnUp', 'arrowup');
+    setupMobileButton('btnRight', 'arrowright');
+
+    // Страховка: если палец ушёл с кнопки — сбросить все
+    document.addEventListener('touchend', () => {
+      keys['arrowleft'] = keys['arrowright'] = keys['arrowup'] = false;
+      document.querySelectorAll('.mobile-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    const gravity = 0.45;       
+    const jumpPower = -16.5;    
+    const moveSpeed = 3.5;       
+
+    let currentLevel = 1;
+    let gameOver = false;
+    let score = 0;
+
+    const levels = {
+      1: {
+        title: 'Уровень 1',
+        playerImg: imgMashulya,
+        doorImg: imgVanya,
+        platforms: [
+          { x: -20, y: 0, w: 30, h: 600 },
+          { x: 890, y: 0, w: 30, h: 600 },
+          { x: 0, y: -20, w: 900, h: 30 },
+          { x: 10, y: 570, w: 880, h: 20 },
+          { x: 10, y: 460, w: 500, h: 20 },
+          { x: 300, y: 350, w: 590, h: 20 },
+          { x: 10, y: 240, w: 500, h: 20 },
+          { x: 300, y: 130, w: 590, h: 20 }
+        ],
+        door: { x: 750, y: 70, w: 60, h: 60 },
+        hearts: [
+          { x: 200, y: 520, w: 30, h: 30, collected: false },
+          { x: 450, y: 410, w: 30, h: 30, collected: false },
+          { x: 700, y: 300, w: 30, h: 30, collected: false },
+          { x: 200, y: 190, w: 30, h: 30, collected: false }
+        ],
+        startX: 60,
+        startY: 510
+      },
+      2: {
+        title: 'Уровень 2',
+        playerImg: imgVanya,
+        doorImg: imgMashulya,
+        platforms: [
+          { x: -20, y: 0, w: 30, h: 600 },
+          { x: 890, y: 0, w: 30, h: 600 },
+          { x: 0, y: -20, w: 900, h: 30 },
+          { x: 10, y: 570, w: 880, h: 20 },
+          { x: 400, y: 460, w: 490, h: 20 },
+          { x: 10, y: 350, w: 500, h: 20 },
+          { x: 400, y: 240, w: 490, h: 20 },
+          { x: 10, y: 130, w: 500, h: 20 }
+        ],
+        door: { x: 80, y: 70, w: 60, h: 60 },
+        hearts: [
+          { x: 100, y: 520, w: 30, h: 30, collected: false },
+          { x: 600, y: 410, w: 30, h: 30, collected: false },
+          { x: 200, y: 300, w: 30, h: 30, collected: false },
+          { x: 600, y: 190, w: 30, h: 30, collected: false }
+        ],
+        startX: 60,
+        startY: 510
+      }
+    };
+
+    let player = { x: 0, y: 0, vx: 0, vy: 0, w: playerWidth, h: playerHeight, isGround: false, facingRight: true };
+
+    const particles = [];
+    const PARTICLE_COUNT = 60;
+
+    function createParticles() {
+      particles.length = 0;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          alpha: Math.random() * 0.5 + 0.2,
+          flickerSpeed: Math.random() * 0.02 + 0.005,
+          flickerPhase: Math.random() * Math.PI * 2,
+          color: Math.random() > 0.5 ? '#ffaa00' : '#ffdd55'
+        });
+      }
+    }
+
+    function updateParticles() {
+      particles.forEach(p => {
+        p.y += p.speedY;
+        p.x += p.speedX;
+        
+        p.flickerPhase += p.flickerSpeed;
+        let currentAlpha = p.alpha + Math.sin(p.flickerPhase) * 0.2;
+        if (currentAlpha < 0.1) currentAlpha = 0.1;
+        if (currentAlpha > 0.8) currentAlpha = 0.8;
+        p.currentAlpha = currentAlpha;
+
+        if (p.y < -10) {
+          p.y = canvas.height + 10;
+          p.x = Math.random() * canvas.width;
+        }
+        if (p.x < -10) p.x = canvas.width + 10;
+        if (p.x > canvas.width + 10) p.x = -10;
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.currentAlpha;
+        ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
+        ctx.globalAlpha = p.currentAlpha * 0.3;
+        ctx.fillRect(Math.floor(p.x) - 1, Math.floor(p.y) - 1, p.size + 2, p.size + 2);
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHeart(x, y, w, h) {
+      if (imgHeart.complete && imgHeart.naturalHeight !== 0) {
+        ctx.save();
+        ctx.shadowColor = '#ff3333';
+        ctx.shadowBlur = 15;
+        ctx.drawImage(imgHeart, x, y, w, h);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#ff3333';
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+
+    function loadLevel(levelNum) {
+      currentLevel = levelNum;
+      const lvl = levels[levelNum];
+      
+      levelTitle.innerText = lvl.title;
+      overlay.classList.remove('show');
+      dancingChars.classList.remove('show');
+      
+      gameOver = false;
+      score = 0;
+
+      player.x = lvl.startX;
+      player.y = lvl.startY;
+      player.vx = 0;
+      player.vy = 0;
+      player.facingRight = true;
+
+      lvl.hearts.forEach(h => h.collected = false);
+      createParticles();
+    }
+
+    mainBtn.addEventListener('click', () => {
+      if (currentLevel === 1) {
+        loadLevel(2);
+      } else {
+        loadLevel(1);
+      }
+    });
+
+    function isColliding(r1, r2) {
+      return !(r2.x >= r1.x + r1.w || 
+               r2.x + r2.w <= r1.x || 
+               r2.y >= r1.y + r1.h ||
+               r2.y + r2.h <= r1.y);
+    }
+
+    function updatePlayer() {
+      if (gameOver) return;
+      const lvl = levels[currentLevel];
+
+      if (keys['arrowleft'] || keys['a']) {
+        player.vx = -moveSpeed;
+        player.facingRight = false;
+      }
+      else if (keys['arrowright'] || keys['d']) {
+        player.vx = moveSpeed;
+        player.facingRight = true;
+      }
+      else player.vx = 0;
+
+      if ((keys['arrowup'] || keys['w']) && player.isGround) {
+        player.vy = jumpPower;
+        player.isGround = false;
+      }
+
+      player.vy += gravity;
+
+      player.x += player.vx;
+      for (let plat of lvl.platforms) {
+        if (isColliding(player, plat)) {
+          if (player.vx > 0) player.x = plat.x - player.w;
+          else if (player.vx < 0) player.x = plat.x + plat.w;
+        }
+      }
+
+      player.y += player.vy;
+      player.isGround = false;
+      for (let plat of lvl.platforms) {
+        if (isColliding(player, plat)) {
+          if (player.vy > 0) {
+            player.y = plat.y - player.h;
+            player.vy = 0;
+            player.isGround = true;
+          } else if (player.vy < 0) {
+            player.y = plat.y + plat.h;
+            player.vy = 0;
+          }
+        }
+      }
+
+      lvl.hearts.forEach(h => {
+        if (!h.collected && isColliding(player, h)) {
+          h.collected = true;
+          score++;
+        }
+      });
+    }
+
+    function checkWin() {
+      if (gameOver) return;
+      const lvl = levels[currentLevel];
+
+      if (isColliding(player, lvl.door)) {
+        gameOver = true;
+        overlay.classList.add('show');
+        
+        if (currentLevel === 1) {
+          overlayTitle.innerText = 'Уровень 1 пройден!';
+          overlayText.innerText = `Сердечек собрано: ${score} из ${lvl.hearts.length}. Тебя ждет уровень 2!`;
+          mainBtn.innerText = 'Следующий уровень';
+        } else {
+          overlayTitle.innerText = 'Победа!';
+          overlayText.innerText = `Все уровни пройдены! Вы получаете купон на 1 бесплатный массаж!`;
+          mainBtn.innerText = 'Играть заново';
+          dancingChars.classList.add('show');
+        }
+      }
+    }
+
+    function drawPlatforms(platforms) {
+      platforms.forEach(plat => {
+        if (plat.y >= 0 && plat.x >= 0) { 
+          ctx.fillStyle = '#3a3a3a';
+          ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+          
+          ctx.fillStyle = '#4a5a3a';
+          ctx.fillRect(plat.x, plat.y, plat.w, Math.min(plat.h, 6));
+          
+          ctx.fillStyle = '#2c2c2c';
+          ctx.fillRect(plat.x + 10, plat.y + 10, 8, 8);
+          ctx.fillRect(plat.x + 30, plat.y + 12, 8, 8);
+          ctx.fillRect(plat.x + 60, plat.y + 11, 8, 8);
+          ctx.fillRect(plat.x + 100, plat.y + 9, 8, 8);
+          
+          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.fillRect(plat.x, plat.y + plat.h - 4, plat.w, 4);
+          ctx.fillStyle = 'rgba(255,255,255,0.05)';
+          ctx.fillRect(plat.x, plat.y, plat.w, 2);
+        }
+      });
+    }
+
+    function draw() {
+      const lvl = levels[currentLevel];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (imgBgGame.complete && imgBgGame.naturalHeight !== 0) {
+        ctx.drawImage(imgBgGame, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        const gradient = ctx.createRadialGradient(450, 300, 100, 450, 300, 600);
+        gradient.addColorStop(0, '#2a2a2a');
+        gradient.addColorStop(1, '#111');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      updateParticles();
+      drawParticles();
+
+      drawPlatforms(lvl.platforms);
+
+      if (lvl.doorImg.complete && lvl.doorImg.naturalHeight !== 0) {
+        ctx.shadowColor = '#ffaa00';
+        ctx.shadowBlur = 15;
+        ctx.drawImage(lvl.doorImg, lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.fillStyle = '#8b0000';
+        ctx.fillRect(lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(lvl.door.x, lvl.door.y, lvl.door.w, lvl.door.h);
+      }
+
+      lvl.hearts.forEach(h => {
+        if (!h.collected) {
+          drawHeart(h.x, h.y, h.w, h.h);
+        }
+      });
+
+      if (lvl.playerImg.complete && lvl.playerImg.naturalHeight !== 0) {
+        if (!player.facingRight) {
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.drawImage(lvl.playerImg, -player.x - player.w, player.y, player.w, player.h);
+          ctx.restore();
+        } else {
+          ctx.drawImage(lvl.playerImg, player.x, player.y, player.w, player.h);
+        }
+        
+        if (imgTorch.complete && imgTorch.naturalHeight !== 0) {
+          const torchSize = 25;
+          const torchX = player.facingRight ? player.x + player.w - 5 : player.x - torchSize + 5;
+          const torchY = player.y + player.h / 2 - 10;
+          
+          ctx.save();
+          ctx.shadowColor = '#ffaa00';
+          ctx.shadowBlur = 20;
+          ctx.drawImage(imgTorch, torchX, torchY, torchSize, torchSize);
+          ctx.restore();
+          
+          const lightGradient = ctx.createRadialGradient(
+            torchX + torchSize/2, torchY + torchSize/2, 5,
+            torchX + torchSize/2, torchY + torchSize/2, 80
+          );
+          lightGradient.addColorStop(0, 'rgba(255, 170, 0, 0.2)');
+          lightGradient.addColorStop(1, 'rgba(255, 170, 0, 0)');
+          ctx.fillStyle = lightGradient;
+          ctx.beginPath();
+          ctx.arc(torchX + torchSize/2, torchY + torchSize/2, 80, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = '#b3e58b'; 
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+      }
+    }
+
+    function gameLoop() {
+      updatePlayer();
+      checkWin();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    loadLevel(1);
+    gameLoop();
+  </script>
+
+</body>
+</html>

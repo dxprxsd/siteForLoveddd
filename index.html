@@ -1597,7 +1597,7 @@
       </div>
 
       <!-- ===== КНОПКИ ===== -->
-      <div class="nav-buttons">
+      <div class="nav-buttons" id="nav-buttons">
         <a href="game.html" class="nav-btn">🎮 Игра</a>
         <a href="restaurant.html" class="nav-btn">🍜 Ресторан</a>
       </div>
@@ -2488,6 +2488,24 @@
       cards.forEach(card => observer.observe(card));
     })();
   </script>
+
+
+<script>
+(function () {
+  function scrollToNavigation() {
+    if (window.location.hash !== '#nav-buttons') return;
+    var target = document.getElementById('nav-buttons');
+    if (!target) return;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+    });
+  }
+  window.addEventListener('load', scrollToNavigation);
+  window.addEventListener('hashchange', scrollToNavigation);
+})();
+</script>
 
 </body>
 </html>
