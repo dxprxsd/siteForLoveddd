@@ -1925,6 +1925,36 @@
     .ldr-ring__progress { transition: none; }
   }
 
+    /* Иконки внутри кнопок навигации */
+  .nav-btn {
+    display: inline-flex;          /* чтобы иконка и текст стояли в ряд */
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .nav-btn__icon {
+    width: 1.4em;
+    height: 1.4em;
+    object-fit: contain;
+    display: block;
+    flex: 0 0 auto;
+    /* картинки обычно тёмные — дадим им лёгкое свечение, как у текста */
+    filter: drop-shadow(0 0 6px rgba(179, 229, 139, 0.35));
+    transition: filter 0.3s ease, transform 0.3s ease;
+  }
+  .nav-btn:hover .nav-btn__icon {
+    filter: drop-shadow(0 0 10px rgba(179, 229, 139, 0.65));
+    transform: scale(1.08);
+  }
+
+  /* На тач-устройствах без hover-эффекта */
+  @media (hover: none) {
+    .nav-btn:hover .nav-btn__icon {
+      filter: drop-shadow(0 0 6px rgba(179, 229, 139, 0.35));
+      transform: none;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2411,8 +2441,14 @@
 
       <!-- ===== КНОПКИ ===== -->
       <div class="nav-buttons" id="nav-buttons">
-        <a href="game.html" class="nav-btn">🎮 Игра</a>
-        <a href="restaurant.html" class="nav-btn">🍜 Ресторан</a>
+        <a href="game.html" class="nav-btn">
+          <img src="sword.png" alt="" class="nav-btn__icon" data-ext-probe="1">
+          <span>Игра</span>
+        </a>
+        <a href="restaurant.html" class="nav-btn">
+          <img src="meall.png" alt="" class="nav-btn__icon" data-ext-probe="1">
+          <span>Ресторан</span>
+        </a>
       </div>
 
       <!-- ===== ВСЕЛЕННАЯ ===== -->
