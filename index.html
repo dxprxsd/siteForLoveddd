@@ -1828,7 +1828,7 @@
     .pl-login-card { padding: 20px; }
   }
 
-    /* ============================================================
+      /* ============================================================
      LOADER — кольцевая загрузка в стиле страницы
      ============================================================ */
   .mc-loader {
@@ -1839,7 +1839,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 28px;
+    gap: 34px;
     background:
       linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)),
       repeating-linear-gradient(0deg, #3a2a1a 0px, #3a2a1a 32px, #2e2114 32px, #2e2114 64px),
@@ -1864,13 +1864,14 @@
     text-shadow: 3px 3px 0 #3f3f3f, 4px 4px 0 #000;
   }
 
-  /* Кольцо */
+  /* Кольцо — внешний контейнер с запасом под свечение */
   .ldr-ring {
     position: relative;
-    width: 140px;
-    height: 140px;
-    display: grid;
-    place-items: center;
+    width: 200px;          /* больше самого кольца, чтобы ореол не обрезался */
+    height: 200px;
+    display: block;        /* без grid, чтобы ничего не клипало */
+    overflow: visible;     /* ключевая правка: свечение выходит за границы */
+    flex: 0 0 auto;
   }
   .ldr-ring svg {
     position: absolute;
@@ -1878,6 +1879,7 @@
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
+    overflow: visible;     /* разрешаем filter выходить за viewBox */
   }
   .ldr-ring__track {
     fill: none;
@@ -1891,32 +1893,31 @@
     stroke-linecap: round;
     stroke-dasharray: 326.72; /* 2 * PI * 52 */
     stroke-dashoffset: 326.72;
-    filter: drop-shadow(0 0 8px rgba(179, 229, 139, 0.85))
-            drop-shadow(0 0 18px rgba(179, 229, 139, 0.55));
+    filter: drop-shadow(0 0 10px rgba(179, 229, 139, 0.95))
+            drop-shadow(0 0 26px rgba(179, 229, 139, 0.65))
+            drop-shadow(0 0 48px rgba(179, 229, 139, 0.4));
     transition: stroke-dashoffset 0.25s ease-out;
   }
   .ldr-ring__pct {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #b3e58b;
-    font-size: 1.4rem;
+    font-size: 1.7rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 14px rgba(179, 229, 139, 0.55);
-    z-index: 2;
-  }
-
-  .mc-loader__text {
-    color: #e0e0e0;
-    font-size: 1rem;
-    letter-spacing: 1px;
-    text-shadow: 2px 2px 0 #000;
-    min-height: 1.2em;
-    text-align: center;
+    text-shadow: 0 0 16px rgba(179, 229, 139, 0.7),
+                 0 0 32px rgba(179, 229, 139, 0.35);
+    pointer-events: none;
   }
 
   @media (max-width: 600px) {
-    .ldr-ring { width: 118px; height: 118px; }
-    .ldr-ring__pct { font-size: 1.15rem; }
+    .ldr-ring { width: 170px; height: 170px; }
+    .ldr-ring__pct { font-size: 1.4rem; }
     .mc-loader__title { font-size: 1.2rem; }
+    .mc-loader { gap: 28px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1928,7 +1929,8 @@
 </head>
 <body>
 
- <!-- ===== LOADER ===== -->
+
+<!-- ===== LOADER ===== -->
 <div class="mc-loader" id="mcLoader" role="status" aria-live="polite" aria-label="Загрузка страницы">
   <div class="mc-loader__title">Наш первый год</div>
 
@@ -1938,10 +1940,6 @@
       <circle class="ldr-ring__progress" id="mcRingProgress" cx="60" cy="60" r="52" />
     </svg>
     <div class="ldr-ring__pct" id="mcRingPct">0%</div>
-  </div>
-
-  <div class="mc-loader__text">
-    <span id="mcLoaderStage">Генерация мира…</span>
   </div>
 </div>
 
@@ -3400,16 +3398,10 @@
 
 </body>
 <script>
-/* ============================================================
-   LOADER — кольцевая загрузка
-   Ждём полной загрузки страницы + всех изображений,
-   показываем кольцо в стиле страницы.
-   ============================================================ */
 (function initPageLoader() {
   const loader   = document.getElementById('mcLoader');
   const ring     = document.getElementById('mcRingProgress');
   const pctEl    = document.getElementById('mcRingPct');
-  const stageEl  = document.getElementById('mcLoaderStage');
 
   if (!loader) return;
 
@@ -3420,17 +3412,6 @@
     ring.style.strokeDashoffset = CIRC;   // 0%
   }
 
-  const STAGES = [
-    { at: 0,   text: "Генерация мира…" },
-    { at: 15,  text: "Загрузка чанков…" },
-    { at: 30,  text: "Создание ландшафта…" },
-    { at: 45,  text: "Заселение мобов…" },
-    { at: 60,  text: "Поиск руды…" },
-    { at: 75,  text: "Загрузка воспоминаний…" },
-    { at: 90,  text: "Почти готово…" },
-    { at: 100, text: "Мир готов!" }
-  ];
-
   let progress = 0;
   let pageLoaded = false;
   let imagesDone = false;
@@ -3438,18 +3419,10 @@
 
   function renderProgress() {
     const p = Math.max(0, Math.min(100, Math.round(progress)));
-
     if (pctEl) pctEl.textContent = p + '%';
     if (ring) {
       const offset = CIRC * (1 - p / 100);
       ring.style.strokeDashoffset = offset;
-    }
-    if (stageEl) {
-      let current = STAGES[0].text;
-      for (const s of STAGES) {
-        if (p >= s.at) current = s.text;
-      }
-      stageEl.textContent = current;
     }
   }
 
